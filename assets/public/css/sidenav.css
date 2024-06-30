@@ -1,0 +1,33 @@
+#main {
+  padding-left: 240px;
+}
+
+#toggler {
+  display: none;
+
+  i {
+    font-size: 2rem;
+  }
+}
+
+#modal-target {
+  display: none
+}
+
+/* #navbarDropdownMenuLink i {
+  font-size: 1.8rem;
+} */
+
+@media (max-width: 960px) {
+  #main {
+    padding-left: 0px;
+  }
+
+  #toggler {
+    display: unset;
+  }
+
+  .sidenav[data-mdb-hidden='false'] {
+    transform: translateX(-100%);
+  }
+}
