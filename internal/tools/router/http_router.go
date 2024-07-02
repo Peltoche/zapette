@@ -33,25 +33,6 @@ type Registerer interface {
 	Register(r chi.Router, mids *Middlewares)
 }
 
-//nolint:gochecknoinits // This is the only way to ensure that we register the methods only once into the global router
-func init() {
-	chi.RegisterMethod("ACL")
-	chi.RegisterMethod("CANCELUPLOAD")
-	chi.RegisterMethod("CHECKIN")
-	chi.RegisterMethod("CHECKOUT")
-	chi.RegisterMethod("COPY")
-	chi.RegisterMethod("MKCALENDAR")
-	chi.RegisterMethod("MKCOL")
-	chi.RegisterMethod("MOVE")
-	chi.RegisterMethod("OPTIONS")
-	chi.RegisterMethod("PROPFIND")
-	chi.RegisterMethod("PROPPATCH")
-	chi.RegisterMethod("REPORT")
-	chi.RegisterMethod("SEARCH")
-	chi.RegisterMethod("UNCHECKOUT")
-	chi.RegisterMethod("VERSION-CONTROL")
-}
-
 func NewServer(routes []Registerer, cfg Config, lc fx.Lifecycle, mids *Middlewares, tools tools.Tools, fs afero.Fs, writer html.Writer) (*API, error) {
 	handler, err := createHandler(cfg, routes, mids, writer)
 	if err != nil {
