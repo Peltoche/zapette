@@ -1,8 +1,10 @@
 package home
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/Peltoche/zapette/internal/service/systats"
 	"github.com/Peltoche/zapette/internal/service/websessions"
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/router"
@@ -16,16 +18,19 @@ type HomePage struct {
 	webSessions websessions.Service
 	auth        *auth.Authenticator
 	html        html.Writer
+	systats     systats.Service
 }
 
 func NewHomePage(
 	html html.Writer,
 	auth *auth.Authenticator,
+	systats systats.Service,
 	tools tools.Tools,
 ) *HomePage {
 	return &HomePage{
-		html: html,
-		auth: auth,
+		html:    html,
+		systats: systats,
+		auth:    auth,
 	}
 }
 
@@ -44,7 +49,22 @@ func (h *HomePage) printPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	memInfos, err := h.systats.FetchMeminfos(r.Context())
+	if err != nil {
+		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to fetch the memInfos: %w", err))
+	}
+
 	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &home.HomePageTmpl{
 		User: user,
+		MemoryBar: home.ValueBar{
+			Value: memInfos.UsedMemory(),
+			Total: memInfos.TotalMemory(),
+			Label: "Memory",
+		},
+		SwapBar: home.ValueBar{
+			Value: memInfos.UsedSwap(),
+			Total: memInfos.TotalSwap(),
+			Label: "Swap",
+		},
 	})
 }

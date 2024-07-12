@@ -9,6 +9,7 @@ import (
 
 	"github.com/Peltoche/zapette/assets"
 	"github.com/Peltoche/zapette/internal/migrations"
+	"github.com/Peltoche/zapette/internal/service/systats"
 	"github.com/Peltoche/zapette/internal/service/users"
 	"github.com/Peltoche/zapette/internal/service/utilities"
 	"github.com/Peltoche/zapette/internal/service/websessions"
@@ -84,6 +85,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			// Services
 			fx.Annotate(users.Init, fx.As(new(users.Service))),
 			fx.Annotate(websessions.Init, fx.As(new(websessions.Service))),
+			fx.Annotate(systats.Init, fx.As(new(systats.Service))),
 
 			// Middlewares
 			middlewares.NewBootstrapMiddleware,
