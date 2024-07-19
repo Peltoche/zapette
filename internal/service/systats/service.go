@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/Peltoche/zapette/internal/tools"
+	"github.com/Peltoche/zapette/internal/tools/clock"
 	"github.com/Peltoche/zapette/internal/tools/datasize"
 	"github.com/spf13/afero"
 )
@@ -23,23 +26,52 @@ func InvalidFieldFormat(key, expected, val string) error {
 	return fmt.Errorf("%s: %w: expected an uint64, have %q", key, ErrInvalidFieldFormat, val)
 }
 
-type service struct {
-	fs afero.Fs
+type storage interface {
+	GetLatest(ctx context.Context) (*Stats, error)
+	Save(ctx context.Context, stats *Stats) error
 }
 
-func newService(fs afero.Fs) *service {
+type service struct {
+	fs      afero.Fs
+	storage storage
+	clock   clock.Clock
+}
+
+func newService(storage storage, fs afero.Fs, tools tools.Tools) *service {
 	return &service{
-		fs: fs,
+		storage: storage,
+		fs:      fs,
+		clock:   tools.Clock(),
 	}
 }
 
-func (s *service) FetchMeminfos(ctx context.Context) (*Memory, error) {
+func (s *service) GetLatest(ctx context.Context) (*Stats, error) {
+	return s.storage.GetLatest(ctx)
+}
+
+func (s *service) fetchAndRegister(ctx context.Context) (*Stats, error) {
+	stats, err := s.fetch(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.storage.Save(ctx, stats)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save the new stats: %w", err)
+	}
+
+	return stats, nil
+}
+
+func (s *service) fetch(ctx context.Context) (*Stats, error) {
+	now := s.clock.Now().Truncate(time.Second)
+
 	content, err := afero.ReadFile(s.fs, filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	cpu := Memory{}
+	mem := Memory{}
 
 	for _, line := range strings.Split(string(content), "\n") {
 		fields := strings.Fields(line)
@@ -49,62 +81,67 @@ func (s *service) FetchMeminfos(ctx context.Context) (*Memory, error) {
 
 		switch fields[0] {
 		case "MemTotal:":
-			cpu.totalMem, err = parseBytesValue(fields)
+			mem.totalMem, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "MemFree:":
-			cpu.freeMem, err = parseBytesValue(fields)
+			mem.freeMem, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "MemAvailable:":
-			cpu.availableMem, err = parseBytesValue(fields)
+			mem.availableMem, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "Buffers:":
-			cpu.buffers, err = parseBytesValue(fields)
+			mem.buffers, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "Cached:":
-			cpu.cached, err = parseBytesValue(fields)
+			mem.cached, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "SReclaimable:":
-			cpu.sReclaimable, err = parseBytesValue(fields)
+			mem.sReclaimable, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "Shmem:":
-			cpu.shmem, err = parseBytesValue(fields)
+			mem.shmem, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "SwapTotal:":
-			cpu.totalSwap, err = parseBytesValue(fields)
+			mem.totalSwap, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 
 		case "SwapFree:":
-			cpu.freeSwap, err = parseBytesValue(fields)
+			mem.freeSwap, err = parseBytesValue(fields)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	return &cpu, nil
+	stats := Stats{
+		time:   now,
+		memory: &mem,
+	}
+
+	return &stats, nil
 }
 
 func parseBytesValue(fields []string) (datasize.ByteSize, error) {
