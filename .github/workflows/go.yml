@@ -50,6 +50,8 @@ jobs:
         run: go install github.com/vektra/mockery/v2@v2.42.0
       - name: Run go generate
         run: go generate ./...
+      - name: Run mockery
+        run: mockery
       - name: Check if there are changes
         id: changes
         uses: UnicornGlobal/has-changes-action@v1.0.11
