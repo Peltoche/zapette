@@ -15,18 +15,7 @@ const tableName = "systats"
 
 var errNotFound = errors.New("not found")
 
-var allFields = []string{
-	"time",
-	"total_mem",
-	"available_mem",
-	"free_mem",
-	"buffers",
-	"cached",
-	"s_reclaimable",
-	"sh_mem",
-	"total_swap",
-	"free_swap",
-}
+var allFields = []string{"time", "content"}
 
 // sqlStorage use to save/retrieve Users
 type sqlStorage struct {
@@ -40,20 +29,14 @@ func newSqlStorage(db sqlstorage.Querier) *sqlStorage {
 
 // Save the given User.
 func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
+	rawStats, _ := stats.MarshalBinary()
+
 	_, err := sq.
 		Insert(tableName).
 		Columns(allFields...).
 		Values(
 			ptr.To(sqlstorage.SQLTime(stats.time)),
-			stats.memory.totalMem,
-			stats.memory.availableMem,
-			stats.memory.freeMem,
-			stats.memory.buffers,
-			stats.memory.cached,
-			stats.memory.sReclaimable,
-			stats.memory.shmem,
-			stats.memory.totalSwap,
-			stats.memory.freeSwap,
+			rawStats,
 		).
 		RunWith(s.db).
 		ExecContext(ctx)
@@ -65,9 +48,7 @@ func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
 }
 
 func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
-	res := Stats{
-		memory: &Memory{},
-	}
+	rawContent := []byte{}
 
 	query := sq.
 		Select(allFields...).
@@ -80,24 +61,17 @@ func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 		RunWith(s.db).
 		ScanContext(ctx,
 			&sqlTime,
-			&res.memory.totalMem,
-			&res.memory.availableMem,
-			&res.memory.freeMem,
-			&res.memory.buffers,
-			&res.memory.cached,
-			&res.memory.sReclaimable,
-			&res.memory.shmem,
-			&res.memory.totalSwap,
-			&res.memory.freeSwap,
+			&rawContent,
 		)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errNotFound
 	}
 
-	res.time = sqlTime.Time()
+	var res Stats
 
+	err = res.UnmarshalBinary(rawContent)
 	if err != nil {
-		return nil, fmt.Errorf("sql error: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal the stats: %w", err)
 	}
 
 	return &res, nil
