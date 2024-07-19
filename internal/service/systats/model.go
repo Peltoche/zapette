@@ -1,6 +1,9 @@
 package systats
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	"math"
 	"time"
 
@@ -20,6 +23,34 @@ func (s *Stats) Memory() *Memory {
 	return s.memory
 }
 
+func (a *Stats) MarshalBinary() ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+
+	rawTime, _ := a.time.MarshalBinary()
+	rawMemory, _ := a.memory.MarshalBinary()
+
+	binary.Write(buf, binary.BigEndian, rawTime)
+	binary.Write(buf, binary.BigEndian, rawMemory)
+
+	return buf.Bytes(), nil
+}
+
+func (a *Stats) UnmarshalBinary(b []byte) error {
+	err := a.time.UnmarshalBinary(b[:15])
+	if err != nil {
+		return fmt.Errorf("failed to decode the time: %w", err)
+	}
+
+	a.memory = &Memory{}
+
+	err = a.memory.UnmarshalBinary(b[15:])
+	if err != nil {
+		return fmt.Errorf("failed to decode the memory: %w", err)
+	}
+
+	return nil
+}
+
 // Memory holds information on system memory usage
 type Memory struct {
 	totalMem     datasize.ByteSize
@@ -31,6 +62,56 @@ type Memory struct {
 	shmem        datasize.ByteSize
 	totalSwap    datasize.ByteSize
 	freeSwap     datasize.ByteSize
+}
+
+func (c *Memory) MarshalBinary() ([]byte, error) {
+	buf := new(bytes.Buffer)
+
+	binary.Write(buf, binary.BigEndian, c.totalMem)
+	binary.Write(buf, binary.BigEndian, c.availableMem)
+	binary.Write(buf, binary.BigEndian, c.freeMem)
+	binary.Write(buf, binary.BigEndian, c.buffers)
+	binary.Write(buf, binary.BigEndian, c.cached)
+	binary.Write(buf, binary.BigEndian, c.sReclaimable)
+	binary.Write(buf, binary.BigEndian, c.shmem)
+	binary.Write(buf, binary.BigEndian, c.totalSwap)
+	binary.Write(buf, binary.BigEndian, c.freeSwap)
+
+	return buf.Bytes(), nil
+}
+
+func (c *Memory) UnmarshalBinary(b []byte) error {
+	buf := bytes.NewReader(b)
+
+	if err := binary.Read(buf, binary.BigEndian, &c.totalMem); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.availableMem); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.freeMem); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.buffers); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.cached); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.sReclaimable); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.shmem); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.totalSwap); err != nil {
+		return err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &c.freeSwap); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c Memory) TotalMemory() datasize.ByteSize {
