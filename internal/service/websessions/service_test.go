@@ -9,15 +9,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/Peltoche/zapette/internal/service/users"
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/errs"
 	"github.com/Peltoche/zapette/internal/tools/secret"
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 	"github.com/Peltoche/zapette/internal/tools/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_WebSessions_Service(t *testing.T) {

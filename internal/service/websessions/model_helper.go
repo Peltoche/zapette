@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/Peltoche/zapette/internal/service/users"
 	"github.com/Peltoche/zapette/internal/tools/secret"
 	"github.com/Peltoche/zapette/internal/tools/uuid"
+	"github.com/brianvoe/gofakeit/v7"
 )
 
 type FakeSessionBuilder struct {

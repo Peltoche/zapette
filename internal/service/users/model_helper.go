@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brianvoe/gofakeit/v7"
-	"github.com/stretchr/testify/require"
 	"github.com/Peltoche/zapette/internal/tools/secret"
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 	"github.com/Peltoche/zapette/internal/tools/uuid"
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/stretchr/testify/require"
 )
 
 type FakeUserBuilder struct {
@@ -40,12 +40,6 @@ func NewFakeUser(t testing.TB) *FakeUserBuilder {
 
 func (f *FakeUserBuilder) WithPassword(password string) *FakeUserBuilder {
 	f.user.password = secret.NewText(password)
-
-	return f
-}
-
-func (f *FakeUserBuilder) WithUsername(username string) *FakeUserBuilder {
-	f.user.username = username
 
 	return f
 }

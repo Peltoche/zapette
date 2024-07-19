@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 )
 
 func TestUserSqlStorage(t *testing.T) {

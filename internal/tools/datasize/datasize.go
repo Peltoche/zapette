@@ -132,7 +132,7 @@ ParseLoop:
 				goto Overflow
 			}
 
-			c = c - '0'
+			c -= '0'
 			val *= 10
 
 			if val > val+uint64(c) {

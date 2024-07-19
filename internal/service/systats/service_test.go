@@ -22,7 +22,7 @@ func TestFetchMemInfos(t *testing.T) {
 
 		res, err := svc.FetchMeminfos(context.Background())
 		require.NoError(t, err)
-		assert.Equal(t, res, &Memory{
+		assert.Equal(t, &Memory{
 			totalMem:     datasize.ByteSize(16199860224),
 			availableMem: datasize.ByteSize(13072998400),
 			freeMem:      datasize.ByteSize(11920449536),
@@ -32,7 +32,7 @@ func TestFetchMemInfos(t *testing.T) {
 			shmem:        datasize.ByteSize(557780992),
 			totalSwap:    datasize.ByteSize(4294963200),
 			freeSwap:     datasize.ByteSize(4294963200),
-		})
+		}, res)
 
 		assert.Equal(t, "15.1 GB", res.TotalMemory().HumanReadable())
 		assert.Equal(t, "11.1 GB", res.FreeMemory().HumanReadable())

@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/Peltoche/zapette/internal/service/users"
 	"github.com/Peltoche/zapette/internal/tools/secret"
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSessionSqlStorage(t *testing.T) {
