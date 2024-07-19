@@ -14,6 +14,7 @@ import (
 	"github.com/Peltoche/zapette/internal/service/utilities"
 	"github.com/Peltoche/zapette/internal/service/websessions"
 	"github.com/Peltoche/zapette/internal/tools"
+	"github.com/Peltoche/zapette/internal/tools/cron"
 	"github.com/Peltoche/zapette/internal/tools/logger"
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
@@ -85,7 +86,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			// Services
 			fx.Annotate(users.Init, fx.As(new(users.Service))),
 			fx.Annotate(websessions.Init, fx.As(new(websessions.Service))),
-			fx.Annotate(systats.Init, fx.As(new(systats.Service))),
+			fx.Annotate(systats.Init),
 
 			// Middlewares
 			middlewares.NewBootstrapMiddleware,
@@ -105,6 +106,12 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 		),
 
 		fx.Invoke(migrations.Run),
+
+		// Start the tasks-runner
+		fx.Invoke(func(svc *systats.SystatsCron, lc fx.Lifecycle, tools tools.Tools) {
+			cronSvc := cron.New(svc.Name(), svc.Duration(), tools, svc)
+			cronSvc.FXRegister(lc)
+		}),
 
 		invoke,
 	)

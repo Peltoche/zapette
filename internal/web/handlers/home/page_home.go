@@ -47,21 +47,21 @@ func (h *HomePage) printPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	memInfos, err := h.systats.FetchMeminfos(r.Context())
+	stats, err := h.systats.GetLatest(r.Context())
 	if err != nil {
-		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to fetch the memInfos: %w", err))
+		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to fetch the stats: %w", err))
 	}
 
 	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &home.HomePageTmpl{
 		User: user,
 		MemoryBar: home.ValueBar{
-			Value: memInfos.UsedMemory(),
-			Total: memInfos.TotalMemory(),
+			Value: stats.Memory().UsedMemory(),
+			Total: stats.Memory().TotalMemory(),
 			Label: "Memory",
 		},
 		SwapBar: home.ValueBar{
-			Value: memInfos.UsedSwap(),
-			Total: memInfos.TotalSwap(),
+			Value: stats.Memory().UsedSwap(),
+			Total: stats.Memory().TotalSwap(),
 			Label: "Swap",
 		},
 	})

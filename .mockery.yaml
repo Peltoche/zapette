@@ -4,6 +4,16 @@ outpkg: "{{.PackageName}}"
 with-expecter: False
 
 packages:
+  github.com/Peltoche/zapette/internal/service/systats:
+    interfaces:
+      Service:
+        config:
+          mockname: "Mock{{.InterfaceName}}"
+          filename: "{{.InterfaceName | camelcase | firstLower}}_mock.go"
+      storage:
+        config:
+          mockname: "mock{{.InterfaceName | camelcase}}"
+          filename: "{{.InterfaceName | camelcase | firstLower}}_mock.go"
   github.com/Peltoche/zapette/internal/service/users:
     interfaces:
       Service:
