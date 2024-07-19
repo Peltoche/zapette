@@ -2,14 +2,30 @@ package systats
 
 import (
 	"context"
+	"database/sql"
 
+	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/spf13/afero"
+	"go.uber.org/fx"
 )
 
-type Service interface {
-	FetchMeminfos(ctx context.Context) (*Memory, error)
+type Result struct {
+	fx.Out
+	Service Service
+	Cron    *SystatsCron
 }
 
-func Init(fs afero.Fs) Service {
-	return newService(fs)
+type Service interface {
+	GetLatest(ctx context.Context) (*Stats, error)
+	fetchAndRegister(ctx context.Context) (*Stats, error)
+}
+
+func Init(db *sql.DB, fs afero.Fs, tools tools.Tools) Result {
+	storage := newSqlStorage(db)
+
+	svc := newService(storage, fs, tools)
+	return Result{
+		Service: svc,
+		Cron:    newSystatCron(svc, tools),
+	}
 }
