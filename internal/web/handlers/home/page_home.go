@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Peltoche/zapette/internal/service/systats"
-	"github.com/Peltoche/zapette/internal/service/websessions"
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
@@ -15,10 +14,9 @@ import (
 )
 
 type HomePage struct {
-	webSessions websessions.Service
-	auth        *auth.Authenticator
-	html        html.Writer
-	systats     systats.Service
+	auth    *auth.Authenticator
+	html    html.Writer
+	systats systats.Service
 }
 
 func NewHomePage(

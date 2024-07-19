@@ -3,11 +3,11 @@ package users
 import (
 	"testing"
 
+	"github.com/Peltoche/zapette/internal/tools/secret"
+	"github.com/Peltoche/zapette/internal/tools/uuid"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/Peltoche/zapette/internal/tools/secret"
-	"github.com/Peltoche/zapette/internal/tools/uuid"
 )
 
 func Test_User_Getters(t *testing.T) {
