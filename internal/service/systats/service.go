@@ -63,7 +63,7 @@ func (s *service) fetchAndRegister(ctx context.Context) (*Stats, error) {
 	return stats, nil
 }
 
-func (s *service) fetch(ctx context.Context) (*Stats, error) {
+func (s *service) fetch(_ context.Context) (*Stats, error) {
 	now := s.clock.Now().Truncate(time.Second)
 
 	content, err := afero.ReadFile(s.fs, filePath)
