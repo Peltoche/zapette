@@ -16,7 +16,7 @@ type Stats struct {
 }
 
 func (s *Stats) Time() time.Time {
-	return s.time
+	return s.time.Truncate(time.Second)
 }
 
 func (s *Stats) Memory() *Memory {
@@ -26,24 +26,21 @@ func (s *Stats) Memory() *Memory {
 func (a *Stats) MarshalBinary() ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 
-	rawTime, _ := a.time.MarshalBinary()
-	rawMemory, _ := a.memory.MarshalBinary()
+	binary.Write(buf, binary.BigEndian, a.time.Truncate(time.Second).Unix())
 
-	binary.Write(buf, binary.BigEndian, rawTime)
+	rawMemory, _ := a.memory.MarshalBinary()
 	binary.Write(buf, binary.BigEndian, rawMemory)
 
 	return buf.Bytes(), nil
 }
 
 func (a *Stats) UnmarshalBinary(b []byte) error {
-	err := a.time.UnmarshalBinary(b[:15])
-	if err != nil {
-		return fmt.Errorf("failed to decode the time: %w", err)
-	}
+	unixSecs := int64(binary.BigEndian.Uint64(b))
+
+	a.time = time.Unix(unixSecs, 0).UTC()
 
 	a.memory = &Memory{}
-
-	err = a.memory.UnmarshalBinary(b[15:])
+	err := a.memory.UnmarshalBinary(b[8:])
 	if err != nil {
 		return fmt.Errorf("failed to decode the memory: %w", err)
 	}
