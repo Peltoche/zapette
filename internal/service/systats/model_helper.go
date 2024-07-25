@@ -23,7 +23,7 @@ func NewFakeStats(t testing.TB) *FakeStatsBuilder {
 	return &FakeStatsBuilder{
 		t: t,
 		stats: &Stats{
-			time: createdAt,
+			time: createdAt.Truncate(time.Second),
 			memory: &Memory{
 				totalMem:     totalMem,
 				availableMem: totalMem / 100 * 90,
@@ -40,7 +40,7 @@ func NewFakeStats(t testing.TB) *FakeStatsBuilder {
 }
 
 func (b *FakeStatsBuilder) WithTime(t time.Time) *FakeStatsBuilder {
-	b.stats.time = t
+	b.stats.time = t.Truncate(time.Second)
 
 	return b
 }

@@ -8,8 +8,6 @@ import (
 )
 
 func TestSystats(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Marshal/Unmarshal binary", func(t *testing.T) {
 		stats := NewFakeStats(t).Build()
 

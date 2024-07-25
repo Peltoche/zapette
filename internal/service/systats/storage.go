@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/Peltoche/zapette/internal/tools/ptr"
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 )
 
@@ -35,7 +34,7 @@ func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
 		Insert(tableName).
 		Columns(allFields...).
 		Values(
-			ptr.To(sqlstorage.SQLTime(stats.time)),
+			stats.time.Unix(),
 			rawStats,
 		).
 		RunWith(s.db).
@@ -56,11 +55,11 @@ func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 		Limit(1).
 		From(tableName)
 
-	var sqlTime sqlstorage.SQLTime
+	var unixTime int64
 	err := query.
 		RunWith(s.db).
 		ScanContext(ctx,
-			&sqlTime,
+			&unixTime,
 			&rawContent,
 		)
 	if errors.Is(err, sql.ErrNoRows) {

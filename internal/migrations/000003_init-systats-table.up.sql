@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS systats (
-  "time" TEXT NOT NULL,
+  "time" INTEGER NOT NULL,
   "content" BLOB NOT NULL
 ) STRICT;
 
