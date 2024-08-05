@@ -29,6 +29,7 @@ func InvalidFieldFormat(key, expected, val string) error {
 type storage interface {
 	GetLatest(ctx context.Context) (*Stats, error)
 	Save(ctx context.Context, stats *Stats) error
+	GetRange(ctx context.Context, start time.Time, end time.Time) ([]Stats, error)
 }
 
 type service struct {
@@ -43,6 +44,24 @@ func newService(storage storage, fs afero.Fs, tools tools.Tools) *service {
 		fs:      fs,
 		clock:   tools.Clock(),
 	}
+}
+
+func (s *service) GetLast5mn(ctx context.Context) ([]Stats, error) {
+	now := s.clock.Now()
+	start := now.Add(-5 * time.Minute)
+
+	stats, err := s.storage.GetRange(ctx, start, now)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]Stats, (5*time.Minute)/(5*time.Second))
+
+	for _, stat := range stats {
+		res[int(stat.Time().Sub(start).Seconds())/5] = stat
+	}
+
+	return res, nil
 }
 
 func (s *service) GetLatest(ctx context.Context) (*Stats, error) {

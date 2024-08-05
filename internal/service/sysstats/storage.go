@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
@@ -46,17 +47,30 @@ func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
 	return nil
 }
 
+func (s *sqlStorage) GetRange(ctx context.Context, start time.Time, end time.Time) ([]Stats, error) {
+	rows, err := sq.
+		Select(allFields...).
+		Where(sq.And{sq.GtOrEq{"time": start.Unix()}, sq.LtOrEq{"time": end.Unix()}}).
+		OrderBy("time ASC").
+		From(tableName).
+		RunWith(s.db).
+		QueryContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query the db: %w", err)
+	}
+
+	return s.scanRows(rows)
+}
+
 func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 	rawContent := []byte{}
+	var unixTime int64
 
-	query := sq.
+	err := sq.
 		Select(allFields...).
 		OrderBy("time DESC").
 		Limit(1).
-		From(tableName)
-
-	var unixTime int64
-	err := query.
+		From(tableName).
 		RunWith(s.db).
 		ScanContext(ctx,
 			&unixTime,
@@ -74,4 +88,35 @@ func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 	}
 
 	return &res, nil
+}
+
+func (s *sqlStorage) scanRows(rows *sql.Rows) ([]Stats, error) {
+	stats := []Stats{}
+
+	for rows.Next() {
+		var unixTime int64
+		rawContent := []byte{}
+
+		err := rows.Scan(
+			&unixTime,
+			&rawContent,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan the result: %w", err)
+		}
+
+		var res Stats
+		err = res.UnmarshalBinary(rawContent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal the stats: %w", err)
+		}
+
+		stats = append(stats, res)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("scan error: %w", err)
+	}
+
+	return stats, nil
 }

@@ -34,6 +34,10 @@ func (a *Stats) MarshalBinary() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (a *Stats) IsEmpty() bool {
+	return a.time.IsZero()
+}
+
 func (a *Stats) UnmarshalBinary(b []byte) error {
 	unixSecs := int64(binary.BigEndian.Uint64(b))
 

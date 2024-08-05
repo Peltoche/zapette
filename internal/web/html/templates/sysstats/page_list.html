@@ -1,24 +1,102 @@
-{{define "value-bar"}}
-<div class="d-flex flex-row justify-content-between align-items-center">
-  <div class="d-flex flex-column align-items-center col-2">
-    <p class="mb-0">{{.Label}}</p>
-  </div>
-  <div class="progress col-6">
-    <div class="progress-bar" role="progressbar" style="width: {{.Percentage}}%;" aria-valuenow="{{.Percentage}}"
-      aria-valuemin="0" aria-valuemax="100"></div>
-  </div>
-  <div class="d-flex flex-column align-items-start col-4">
-    <p class="mb-0 ms-4"><span class="fw-bold">{{.Value.HR}}</span> / {{.Total.HR}}</p>
-  </div>
-</div>
-{{end}}
-
 <div class="container">
-  <div class="card mt-4">
-    <div class="card-body">
-      <h3 class="card-title">Memory</h3>
-      {{template "value-bar" .MemoryBar}}
-      {{template "value-bar" .SwapBar}}
+  <div class="card mt-4 text-center">
+    <div class="card-header bg-light border-0">
+      <p class="mb-0"><strong>Memory</strong></p>
     </div>
+    <div class="card-body">
+      <div class="d-flex justify-content-around">
+        <div>
+          <p class="mb-2">RAM</p>
+          <h6>{{.Latest.Memory.UsedMemory.HR}}/{{.Latest.Memory.TotalMemory.HR}}</h6>
+        </div>
+        <div>
+          <p class="mb-2">Cache</p>
+          <h6>{{.Latest.Memory.BufCache.HR}}</h6>
+        </div>
+        <div>
+          <p class="mb-2">Swap</p>
+          <h6>{{.Latest.Memory.UsedSwap.HR}}/{{.Latest.Memory.TotalSwap.HR}}</h6>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="line-chart"></canvas>
   </div>
 </div>
+</div>
+
+
+<script type="module">
+  import {Chart, initMDB} from "/assets/js/libs/chart.es.min.js";
+
+  const labels = {{.Labels}}
+  const memoryUsed = {{.MemoryUsed}}
+  const memoryTotal = {{.MemoryTotal}}
+  const swapUsed = {{.SwapUsed}}
+  const cacheBuffer = {{.CacheBuffer}}
+
+  initMDB({Chart})
+
+  const dataLine = {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Total',
+          data: memoryTotal,
+          showLine: true,
+          borderColor: 'red',
+          steppedLine: true,
+          borderWidth: 1,
+          pointRadius: 0,
+        },
+        {
+          label: 'RAM',
+          data: memoryUsed,
+          borderColor: 'black',
+          pointRadius: 0,
+        },
+        {
+          label: 'Cache + Buffer',
+          data: cacheBuffer,
+          borderColor: 'blue',
+          // borderWidth: 1,
+          pointRadius: 0,
+        },
+        {
+          label: 'Swap',
+          data: swapUsed,
+          borderColor: '#bf1b00',
+          // borderWidth: 1,
+          pointRadius: 0,
+        }
+      ],
+    },
+  }
+
+  new Chart(document.getElementById('line-chart'), dataLine, {
+    options: {
+      animation: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 10,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            beginAtZaero: true,
+            callback: function (value, index, values) {
+              return value + " " + "GiB";
+            },
+          }
+        },
+      },
+    },
+  });
+
+</script>

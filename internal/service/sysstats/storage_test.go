@@ -47,4 +47,18 @@ func TestSystatSqlStorage(t *testing.T) {
 
 		assert.EqualValues(t, stats2, res)
 	})
+
+	t.Run("GetRange succes", func(t *testing.T) {
+		res, err := store.GetRange(ctx, time1, time2)
+		require.NoError(t, err)
+
+		assert.EqualValues(t, []Stats{*stats, *stats2}, res)
+	})
+
+	t.Run("GetRange succes 2", func(t *testing.T) {
+		res, err := store.GetRange(ctx, time1.Add(time.Second), time2)
+		require.NoError(t, err)
+
+		assert.EqualValues(t, []Stats{*stats2}, res)
+	})
 }
