@@ -1,4 +1,4 @@
-package home
+package sysstats
 
 import (
 	"fmt"
@@ -9,39 +9,40 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
 	"github.com/Peltoche/zapette/internal/web/html"
-	"github.com/Peltoche/zapette/internal/web/html/templates/home"
+	"github.com/Peltoche/zapette/internal/web/html/templates/sysstats"
+	sysstatstmpl "github.com/Peltoche/zapette/internal/web/html/templates/sysstats"
 	"github.com/go-chi/chi/v5"
 )
 
-type HomePage struct {
+type SysstatsPage struct {
 	auth    *auth.Authenticator
 	html    html.Writer
 	systats systats.Service
 }
 
-func NewHomePage(
+func NewSysstatsPage(
 	html html.Writer,
 	auth *auth.Authenticator,
 	systats systats.Service,
 	tools tools.Tools,
-) *HomePage {
-	return &HomePage{
+) *SysstatsPage {
+	return &SysstatsPage{
 		html:    html,
 		systats: systats,
 		auth:    auth,
 	}
 }
 
-func (h *HomePage) Register(r chi.Router, mids *router.Middlewares) {
+func (h *SysstatsPage) Register(r chi.Router, mids *router.Middlewares) {
 	if mids != nil {
 		r = r.With(mids.Defaults()...)
 	}
 
-	r.Get("/", http.RedirectHandler("/web/home", http.StatusFound).ServeHTTP)
-	r.Get("/web/home", h.printPage)
+	r.Get("/", http.RedirectHandler("/web/sysstats", http.StatusFound).ServeHTTP)
+	r.Get("/web/sysstats", h.printPage)
 }
 
-func (h *HomePage) printPage(w http.ResponseWriter, r *http.Request) {
+func (h *SysstatsPage) printPage(w http.ResponseWriter, r *http.Request) {
 	user, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
 	if abort {
 		return
@@ -52,14 +53,14 @@ func (h *HomePage) printPage(w http.ResponseWriter, r *http.Request) {
 		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to fetch the stats: %w", err))
 	}
 
-	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &home.HomePageTmpl{
+	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &sysstatstmpl.SysstatsPageTmpl{
 		User: user,
-		MemoryBar: home.ValueBar{
+		MemoryBar: sysstats.ValueBar{
 			Value: stats.Memory().UsedMemory(),
 			Total: stats.Memory().TotalMemory(),
 			Label: "Memory",
 		},
-		SwapBar: home.ValueBar{
+		SwapBar: sysstats.ValueBar{
 			Value: stats.Memory().UsedSwap(),
 			Total: stats.Memory().TotalSwap(),
 			Label: "Swap",

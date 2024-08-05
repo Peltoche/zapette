@@ -78,7 +78,7 @@ func Test_LoginPage(t *testing.T) {
 		res := w.Result()
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusFound, res.StatusCode)
-		assert.Equal(t, "/web/home", res.Header.Get("Location"))
+		assert.Equal(t, "/web/sysstats", res.Header.Get("Location"))
 	})
 
 	t.Run("ApplyLogin success", func(t *testing.T) {
@@ -125,7 +125,7 @@ func Test_LoginPage(t *testing.T) {
 		res := w.Result()
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusFound, res.StatusCode)
-		assert.Equal(t, "/web/home", res.Header.Get("Location"))
+		assert.Equal(t, "/web/sysstats", res.Header.Get("Location"))
 		assert.Len(t, res.Cookies(), 1)
 		assert.Equal(t, "session_token", res.Cookies()[0].Name)
 		assert.Empty(t, res.Cookies()[0].Expires)
@@ -178,7 +178,7 @@ func Test_LoginPage(t *testing.T) {
 		res := w.Result()
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusFound, res.StatusCode)
-		assert.Equal(t, "/web/home", res.Header.Get("Location"))
+		assert.Equal(t, "/web/sysstats", res.Header.Get("Location"))
 		assert.Len(t, res.Cookies(), 1)
 		assert.Equal(t, "session_token", res.Cookies()[0].Name)
 		assert.WithinDuration(t, now.Add(cookieLifeTime), res.Cookies()[0].Expires, 2*time.Second)

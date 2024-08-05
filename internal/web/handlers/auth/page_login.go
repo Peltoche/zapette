@@ -120,7 +120,7 @@ func (h *LoginPage) applyLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *LoginPage) chooseRedirection(w http.ResponseWriter, r *http.Request) {
 	// NOTE: The oauth dance is not implemented yet
-	http.Redirect(w, r, "/web/home", http.StatusFound)
+	http.Redirect(w, r, "/web/sysstats", http.StatusFound)
 
 	// TODO: Uncomment this once the oauth2 is implemented
 	//

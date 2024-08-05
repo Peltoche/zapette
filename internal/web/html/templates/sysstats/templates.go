@@ -1,4 +1,4 @@
-package home
+package sysstats
 
 import (
 	"math"
@@ -7,13 +7,13 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/datasize"
 )
 
-type HomePageTmpl struct {
+type SysstatsPageTmpl struct {
 	User      *users.User
 	MemoryBar ValueBar
 	SwapBar   ValueBar
 }
 
-func (t *HomePageTmpl) Template() string { return "home/page_home" }
+func (t *SysstatsPageTmpl) Template() string { return "sysstats/page_list" }
 
 type ValueBar struct {
 	Label string
