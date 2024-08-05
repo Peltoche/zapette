@@ -17,6 +17,7 @@ type Result struct {
 
 type Service interface {
 	GetLatest(ctx context.Context) (*Stats, error)
+	GetLast5mn(ctx context.Context) ([]Stats, error)
 	fetchAndRegister(ctx context.Context) (*Stats, error)
 }
 
