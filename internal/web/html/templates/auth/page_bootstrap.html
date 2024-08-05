@@ -9,40 +9,33 @@
           <div class="card-body p-5">
             <h1 class="fs-4 card-title fw-bold mb-4 text-center">Bootstrap your Zapette!</h1>
             <p class="text-secondary text-center">Create your first user</p>
-            <form method="POST" action="/web/bootstrap" method="post" target="_top" class="needs-validation"  novalidate="" autocomplete="off">
+            <form method="POST" action="/web/bootstrap" method="post" target="_top" class="needs-validation"
+              novalidate="" autocomplete="off">
 
               <div class="mb-3 pb-1">
                 <div class="form-outline mb-3" data-mdb-input-init>
-                  <input 
-                    type="text" 
-                    autofocus 
-                    id="usernameInput" 
-                    name="username" 
-                    class="form-control form-control-lg {{ if .UsernameError }}is-invalid{{ end }}" 
-                    value="{{.Username}}"
-                  />
+                  <input type="text" autofocus id="usernameInput" name="username"
+                    class="form-control form-control-lg {{ if .UsernameError }}is-invalid{{ end }}"
+                    value="{{.Username}}" />
                   <label class="form-label" for="usernameInput">Username</label>
                   <div class="invalid-feedback">{{ .UsernameError }}</div>
                 </div>
               </div>
 
               <div class="mb-3 pb-1">
-              <div class="form-outline mb-3" data-mdb-input-init>
-                <input 
-                    type="password" 
-                    id="passwordInput" 
-                    name="password" 
+                <div class="form-outline mb-3" data-mdb-input-init>
+                  <input type="password" id="passwordInput" name="password"
                     class="form-control form-control-lg {{ if .PasswordError }}is-invalid{{ end }}"
-                    value="{{.Password.Raw}}"
-                  />
-                <label class="form-label" for="passwordInput">User Password</label>
-                <div class="invalid-feedback">{{ .PasswordError }}</div>
-              </div>
+                    value="{{.Password.Raw}}" />
+                  <label class="form-label" for="passwordInput">User Password</label>
+                  <div class="invalid-feedback">{{ .PasswordError }}</div>
+                </div>
               </div>
 
               <div class="mb-3 pb-1">
                 <div class="form-outline mb-3" data-mdb-input-init>
-                  <input type="password" autofocus id="confirmInput" name="confirm" class="form-control form-control-lg {{ if .ConfirmError }}is-invalid{{ end }}" />
+                  <input type="password" autofocus id="confirmInput" name="confirm"
+                    class="form-control form-control-lg {{ if .ConfirmError }}is-invalid{{ end }}" />
                   <label class="form-label" for="confirmInput">Re-enter your password</label>
                   <div class="invalid-feedback">{{ .ConfirmError }}</div>
                 </div>
@@ -60,7 +53,7 @@
 </section>
 
 <script type="module">
-import {Input, Popover, initMDB} from "/assets/js/libs/mdb.es.min.js";
+  import {Input, Popover, initMDB} from "/assets/js/libs/mdb.es.min.js";
 
-initMDB({Input, Popover})
+  initMDB({Input, Popover})
 </script>
