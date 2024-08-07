@@ -1,4 +1,4 @@
-package systats
+package sysstats
 
 import (
 	"bytes"
