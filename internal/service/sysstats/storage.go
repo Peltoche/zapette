@@ -1,4 +1,4 @@
-package systats
+package sysstats
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 )
 
-const tableName = "systats"
+const tableName = "sysstats"
 
 var errNotFound = errors.New("not found")
 

@@ -1,4 +1,4 @@
-package systats
+package sysstats
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func newSystatCron(service Service, tools tools.Tools) *SystatsCron {
 }
 
 func (c *SystatsCron) Name() string {
-	return "systats"
+	return "sysstats"
 }
 
 func (c *SystatsCron) Duration() time.Duration {

@@ -4,7 +4,7 @@ outpkg: "{{.PackageName}}"
 with-expecter: False
 
 packages:
-  github.com/Peltoche/zapette/internal/service/systats:
+  github.com/Peltoche/zapette/internal/service/sysstats:
     interfaces:
       Service:
         config:
