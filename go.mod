@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/adrg/xdg v0.4.0
+	github.com/adrg/xdg v0.5.0
 	github.com/awnumar/memguard v0.22.5
 	github.com/brianvoe/gofakeit/v7 v7.0.4
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
