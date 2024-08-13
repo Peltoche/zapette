@@ -2,7 +2,6 @@ package errs
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +11,7 @@ import (
 // Most of the code is tested in [../response] package
 
 func Test_ValidationError_match_ErrValidation(t *testing.T) {
-	err := BadRequest(fmt.Errorf("some-error"), "super message")
+	err := BadRequest(errors.New("some-error"), "super message")
 
 	require.ErrorIs(t, err, ErrBadRequest)
 	require.EqualError(t, err, "bad request: some-error")
@@ -27,55 +26,55 @@ func TestErrorMsgFormat(t *testing.T) {
 	}{
 		{
 			Name:          "BadRequest with the default message",
-			Err:           BadRequest(fmt.Errorf("some-error")),
+			Err:           BadRequest(errors.New("some-error")),
 			UserJSON:      `{"message": "bad request"}`,
 			InternalError: "bad request: some-error",
 		},
 		{
 			Name:          "BadRequest with a custom message",
-			Err:           BadRequest(fmt.Errorf("some-error"), "some details: %d", 42),
+			Err:           BadRequest(errors.New("some-error"), "some details: %d", 42),
 			UserJSON:      `{"message": "some details: 42"}`,
 			InternalError: "bad request: some-error",
 		},
 		{
 			Name:          "Unauthorized with the default message",
-			Err:           Unauthorized(fmt.Errorf("some-error")),
+			Err:           Unauthorized(errors.New("some-error")),
 			UserJSON:      `{"message": "unauthorized"}`,
 			InternalError: "unauthorized: some-error",
 		},
 		{
 			Name:          "Unauthorized with a custom message",
-			Err:           Unauthorized(fmt.Errorf("some-error"), "some details: %d", 42),
+			Err:           Unauthorized(errors.New("some-error"), "some details: %d", 42),
 			UserJSON:      `{"message": "some details: 42"}`,
 			InternalError: "unauthorized: some-error",
 		},
 		{
 			Name:          "NotFound with the default message",
-			Err:           NotFound(fmt.Errorf("some-error")),
+			Err:           NotFound(errors.New("some-error")),
 			UserJSON:      `{"message": "not found"}`,
 			InternalError: "not found: some-error",
 		},
 		{
 			Name:          "NotFound with a custom message",
-			Err:           NotFound(fmt.Errorf("some-error"), "some details: %d", 42),
+			Err:           NotFound(errors.New("some-error"), "some details: %d", 42),
 			UserJSON:      `{"message": "some details: 42"}`,
 			InternalError: "not found: some-error",
 		},
 		{
 			Name:          "Unhandled with the default message",
-			Err:           Unhandled(fmt.Errorf("some-error")),
+			Err:           Unhandled(errors.New("some-error")),
 			UserJSON:      `{"message": "internal error"}`,
 			InternalError: "unhandled: some-error",
 		},
 		{
 			Name:          "Validation with the default message",
-			Err:           Validation(fmt.Errorf("some-error")),
+			Err:           Validation(errors.New("some-error")),
 			UserJSON:      `{"message": "some-error"}`,
 			InternalError: "validation: some-error",
 		},
 		{
 			Name:          "Internal with the default message",
-			Err:           Internal(fmt.Errorf("some-error")),
+			Err:           Internal(errors.New("some-error")),
 			UserJSON:      `{"message": "internal error"}`,
 			InternalError: "internal: some-error",
 		},

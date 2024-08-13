@@ -168,7 +168,7 @@ func (k SealedKey) Value() (driver.Value, error) {
 func (s *SealedKey) Scan(src any) error {
 	v, ok := src.([]byte)
 	if !ok {
-		return fmt.Errorf("expected a []byte")
+		return errors.New("expected a []byte")
 	}
 
 	s.v = [SealedKeyLength]byte(v)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"testing"
@@ -30,7 +29,7 @@ func TestFxLogger(t *testing.T) {
 			give: &fxevent.OnStopExecuted{
 				FunctionName: "hook.onStart1",
 				CallerName:   "bytes.NewBuffer",
-				Err:          fmt.Errorf("some error"),
+				Err:          errors.New("some error"),
 			},
 			wantMessage: "OnStop hook failed",
 			wantFields: map[string]interface{}{
@@ -42,7 +41,7 @@ func TestFxLogger(t *testing.T) {
 			give: &fxevent.OnStartExecuted{
 				FunctionName: "hook.onStart1",
 				CallerName:   "bytes.NewBuffer",
-				Err:          fmt.Errorf("some error"),
+				Err:          errors.New("some error"),
 			},
 			wantMessage: "OnStart hook failed",
 			wantFields: map[string]interface{}{

@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	ErrBadRequest   = fmt.Errorf("bad request")  // HTTP code: 400
-	ErrUnauthorized = fmt.Errorf("unauthorized") // HTTP code: 401
-	ErrNotFound     = fmt.Errorf("not found")    // HTTP code: 404
-	ErrValidation   = fmt.Errorf("validation")   // HTTP code: 422
-	ErrUnhandled    = fmt.Errorf("unhandled")    // HTTP code: 500
-	ErrInternal     = fmt.Errorf("internal")     // HTTP code: 500
+	ErrBadRequest   = errors.New("bad request")  // HTTP code: 400
+	ErrUnauthorized = errors.New("unauthorized") // HTTP code: 401
+	ErrNotFound     = errors.New("not found")    // HTTP code: 404
+	ErrValidation   = errors.New("validation")   // HTTP code: 422
+	ErrUnhandled    = errors.New("unhandled")    // HTTP code: 500
+	ErrInternal     = errors.New("internal")     // HTTP code: 500
 )
 
 type errResponse struct {

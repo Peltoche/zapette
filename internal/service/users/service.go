@@ -15,13 +15,13 @@ import (
 )
 
 var (
-	ErrAlreadyExists     = fmt.Errorf("user already exists")
-	ErrUsernameTaken     = fmt.Errorf("username taken")
-	ErrInvalidUsername   = fmt.Errorf("invalid username")
-	ErrInvalidPassword   = fmt.Errorf("invalid password")
-	ErrLastAdmin         = fmt.Errorf("can't remove the last admin")
-	ErrInvalidStatus     = fmt.Errorf("invalid status")
-	ErrUnauthorizedSpace = fmt.Errorf("unauthorized space")
+	ErrAlreadyExists     = errors.New("user already exists")
+	ErrUsernameTaken     = errors.New("username taken")
+	ErrInvalidUsername   = errors.New("invalid username")
+	ErrInvalidPassword   = errors.New("invalid password")
+	ErrLastAdmin         = errors.New("can't remove the last admin")
+	ErrInvalidStatus     = errors.New("invalid status")
+	ErrUnauthorizedSpace = errors.New("unauthorized space")
 )
 
 // storage encapsulates the logic to access user from the data source.

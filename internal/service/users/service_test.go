@@ -2,7 +2,7 @@ package users
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -99,7 +99,7 @@ func Test_Users_Service(t *testing.T) {
 		user := NewFakeUser(t).Build()
 
 		// Mocks
-		store.On("GetByUsername", ctx, "Donald-Duck").Return(nil, fmt.Errorf("some-error")).Once()
+		store.On("GetByUsername", ctx, "Donald-Duck").Return(nil, errors.New("some-error")).Once()
 
 		res, err := service.Create(ctx, &CreateCmd{
 			CreatedBy: user,
@@ -185,7 +185,7 @@ func Test_Users_Service(t *testing.T) {
 
 		// Mocks
 		store.On("GetByUsername", ctx, "Donald-Duck").Return(user, nil).Once()
-		tools.PasswordMock.On("Compare", ctx, user.password, secret.NewText("some-password")).Return(false, fmt.Errorf("some-error")).Once()
+		tools.PasswordMock.On("Compare", ctx, user.password, secret.NewText("some-password")).Return(false, errors.New("some-error")).Once()
 
 		// Run
 		res, err := service.Authenticate(ctx, "Donald-Duck", secret.NewText("some-password"))
@@ -490,7 +490,7 @@ func Test_Users_Service(t *testing.T) {
 		store.On("Patch", mock.Anything, user.ID(), map[string]any{
 			"password":            secret.NewText("some-encrypted-password"),
 			"password_changed_at": sqlstorage.SQLTime(now),
-		}).Return(fmt.Errorf("some-error")).Once()
+		}).Return(errors.New("some-error")).Once()
 
 		// Run
 		err := service.UpdateUserPassword(ctx, &UpdatePasswordCmd{

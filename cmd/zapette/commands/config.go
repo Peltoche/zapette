@@ -81,7 +81,7 @@ func NewConfigFromCmd(cmd *cobra.Command) (server.Config, error) {
 	case "err", "error":
 		logLevel = slog.LevelError
 	default:
-		return server.Config{}, fmt.Errorf("invalid log level")
+		return server.Config{}, errors.New("invalid log level")
 	}
 
 	if cfg.Debug {

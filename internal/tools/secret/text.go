@@ -7,6 +7,7 @@ package secret
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 )
@@ -93,7 +94,7 @@ func (s Text) Value() (driver.Value, error) {
 func (s *Text) Scan(src any) error {
 	str, ok := src.(string)
 	if !ok {
-		return fmt.Errorf("not a string")
+		return errors.New("not a string")
 	}
 
 	s.v = str
