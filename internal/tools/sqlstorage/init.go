@@ -27,8 +27,9 @@ type Transactor interface {
 	WithinTransaction(context.Context, func(ctx context.Context) error) error
 }
 
-func Init(cfg Config, tools tools.Tools) (Result, error) {
-	db, err := NewSQliteClient(&cfg)
+func Init(hooks []SQLChangeHook, cfg Config, tools tools.Tools) (Result, error) {
+	fmt.Printf("run init \n#####\n########\n")
+	db, err := NewSQliteClient(&cfg, hooks, tools.Logger())
 	if err != nil {
 		return Result{}, fmt.Errorf("sqlite error: %w", err)
 	}

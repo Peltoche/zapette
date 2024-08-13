@@ -4,8 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"net/url"
+
+	"github.com/mattn/go-sqlite3"
 )
+
+const driverName = "sqlite3-with-hooks"
 
 type Config struct {
 	Path string `json:"path"`
@@ -27,6 +32,12 @@ type Querier interface {
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }
 
+type SQLChangeHook interface {
+	Name() string
+	ShouldRunHook(table string) bool
+	RunHook(ctx context.Context, db Querier, table string) error
+}
+
 type Client struct {
 	db *sql.DB
 }
@@ -35,7 +46,7 @@ func NewSQLQuerier(db *sql.DB) Querier {
 	return &Client{db}
 }
 
-func NewSQliteClient(cfg *Config) (*sql.DB, error) {
+func NewSQliteClient(cfg *Config, hooks []SQLChangeHook, logger *slog.Logger) (*sql.DB, error) {
 	var db *sql.DB
 	var err error
 
@@ -49,7 +60,38 @@ func NewSQliteClient(cfg *Config) (*sql.DB, error) {
 
 	dsn := "file:" + cfg.Path + "?" + connectionUrlParams.Encode()
 
-	db, err = sql.Open("sqlite3", dsn)
+	// The driver need a custom name due to custom registration with the hook.
+	driverName := fmt.Sprintf("sqlite3-hooks-%d", len(sql.Drivers()))
+
+	sql.Register(driverName, &sqlite3.SQLiteDriver{
+		ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+			conn.RegisterUpdateHook(func(op int, dbName string, tableName string, rowID int64) {
+				for _, hook := range hooks {
+					if !hook.ShouldRunHook(tableName) {
+						continue
+					}
+
+					err := hook.RunHook(nil, db, tableName)
+					if err != nil {
+						logger.Error("RunHook error", slog.String("hook", hook.Name()), slog.String("error", err.Error()))
+						return
+					}
+
+					logger.Debug("RunHook success", slog.String("hook", hook.Name()), slog.String("table", tableName))
+				}
+			})
+
+			return nil
+		},
+	})
+
+	for _, hook := range hooks {
+		logger.Debug("register SQL hook", slog.String("hook", hook.Name()))
+	}
+
+	logger.Info("start listening sql hooks", slog.Int("hooks", len(hooks)))
+
+	db, err = sql.Open(driverName, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open %q: %w", dsn, err)
 	}

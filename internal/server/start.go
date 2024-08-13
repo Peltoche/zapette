@@ -9,6 +9,7 @@ import (
 
 	"github.com/Peltoche/zapette/assets"
 	"github.com/Peltoche/zapette/internal/migrations"
+	"github.com/Peltoche/zapette/internal/service/events"
 	"github.com/Peltoche/zapette/internal/service/sysstats"
 	"github.com/Peltoche/zapette/internal/service/users"
 	"github.com/Peltoche/zapette/internal/service/utilities"
@@ -50,6 +51,16 @@ func AsRoute(f any) any {
 	)
 }
 
+// AsSQLHook annotates the given constructor to state that
+// it provides a route to the "hooks" group.
+func AsSQLHook(f any) any {
+	return fx.Annotate(
+		f,
+		fx.As(new(sqlstorage.SQLChangeHook)),
+		fx.ResultTags(`group:"hooks"`),
+	)
+}
+
 func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 	app := fx.New(
 		fx.WithLogger(func(tools tools.Tools) fxevent.Logger { return logger.NewFxLogger(tools.Logger()) }),
@@ -80,13 +91,16 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			// Tools
 			fx.Annotate(tools.NewToolbox, fx.As(new(tools.Tools))),
 			fx.Annotate(html.NewRenderer, fx.As(new(html.Writer))),
-			sqlstorage.Init,
+			fx.Annotate(sqlstorage.Init, fx.ParamTags(`group:"hooks"`)),
 			auth.NewAuthenticator,
 
 			// Services
 			fx.Annotate(users.Init, fx.As(new(users.Service))),
 			fx.Annotate(websessions.Init, fx.As(new(websessions.Service))),
 			fx.Annotate(sysstats.Init),
+
+			// Hooks
+			AsSQLHook(events.New),
 
 			// Middlewares
 			middlewares.NewBootstrapMiddleware,
