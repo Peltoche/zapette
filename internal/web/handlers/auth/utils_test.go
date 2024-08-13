@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,7 +41,7 @@ func Test_Utils_Authenticator(t *testing.T) {
 		htmlMock := html.NewMock(t)
 		auth := NewAuthenticator(webSessionsMock, usersMock, htmlMock)
 
-		webSessionsMock.On("GetFromReq", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("some-error")).Once()
+		webSessionsMock.On("GetFromReq", mock.Anything, mock.Anything).Return(nil, errors.New("some-error")).Once()
 
 		htmlMock.On("WriteHTMLErrorPage", mock.Anything, mock.Anything, mock.Anything).Once()
 
@@ -81,7 +81,7 @@ func Test_Utils_Authenticator(t *testing.T) {
 		auth := NewAuthenticator(webSessionsMock, usersMock, htmlMock)
 
 		webSessionsMock.On("GetFromReq", mock.Anything, mock.Anything).Return(&websessions.AliceWebSessionExample, nil).Once()
-		usersMock.On("GetByID", mock.Anything, users.ExampleAlice.ID()).Return(nil, fmt.Errorf("some-error")).Once()
+		usersMock.On("GetByID", mock.Anything, users.ExampleAlice.ID()).Return(nil, errors.New("some-error")).Once()
 
 		htmlMock.On("WriteHTMLErrorPage", mock.Anything, mock.Anything, mock.Anything).Once()
 

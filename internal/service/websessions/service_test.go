@@ -3,7 +3,6 @@ package websessions
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -107,7 +106,7 @@ func Test_WebSessions_Service(t *testing.T) {
 		// Mocks
 		tools.UUIDMock.On("New").Return(uuid.UUID(rawToken)).Once()
 		tools.ClockMock.On("Now").Return(now).Once()
-		storageMock.On("Save", mock.Anything, session).Return(fmt.Errorf("some-error")).Once()
+		storageMock.On("Save", mock.Anything, session).Return(errors.New("some-error")).Once()
 
 		// Run
 		res, err := service.Create(ctx, &CreateCmd{
@@ -483,7 +482,7 @@ func Test_WebSessions_Service(t *testing.T) {
 		user := users.NewFakeUser(t).Build()
 
 		// Mocks
-		storageMock.On("GetAllForUser", mock.Anything, user.ID(), (*sqlstorage.PaginateCmd)(nil)).Return(nil, fmt.Errorf("some-error")).Once()
+		storageMock.On("GetAllForUser", mock.Anything, user.ID(), (*sqlstorage.PaginateCmd)(nil)).Return(nil, errors.New("some-error")).Once()
 
 		// Run
 		err := service.DeleteAll(ctx, user.ID())
@@ -508,7 +507,7 @@ func Test_WebSessions_Service(t *testing.T) {
 		// Mocks
 		storageMock.On("GetAllForUser", mock.Anything, user.ID(), (*sqlstorage.PaginateCmd)(nil)).Return([]Session{*session, *session2}, nil).Once()
 		storageMock.On("GetByToken", mock.Anything, session.Token()).Return(session, nil).Once()
-		storageMock.On("RemoveByToken", mock.Anything, session.Token()).Return(fmt.Errorf("some-error")).Once()
+		storageMock.On("RemoveByToken", mock.Anything, session.Token()).Return(errors.New("some-error")).Once()
 		// Do not call GetByToken and RemoveByToken for "session2"
 
 		// Run

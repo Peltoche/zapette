@@ -55,6 +55,7 @@ linters:
     - govet
     - misspell
     - nolintlint
+    - perfsprint
     - rowserrcheck
     - sloglint
     - tenv
