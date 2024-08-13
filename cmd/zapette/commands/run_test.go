@@ -44,7 +44,7 @@ func Test_NewRunCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		var res *http.Response
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			res, err = http.DefaultClient.Do(req)
 			if err == nil || !strings.Contains(err.Error(), "connection refused") {
 				break
@@ -90,7 +90,7 @@ func Test_NewRunCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		var res *http.Response
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			res, err = http.DefaultClient.Do(req)
 			if err == nil || !strings.Contains(err.Error(), "connection refused") {
 				break
@@ -137,7 +137,7 @@ func Test_NewRunCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		var res *http.Response
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			res, err = client.Do(req)
 			if err == nil || !strings.Contains(err.Error(), "connection refused") {
 				break

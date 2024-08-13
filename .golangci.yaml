@@ -53,6 +53,7 @@ linters:
     - gofmt
     - gofumpt
     - govet
+    - intrange
     - misspell
     - nolintlint
     - perfsprint
