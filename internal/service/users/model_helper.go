@@ -2,11 +2,11 @@ package users
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/Peltoche/zapette/internal/tools/secret"
-	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 	"github.com/Peltoche/zapette/internal/tools/uuid"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/require"
@@ -60,7 +60,7 @@ func (f *FakeUserBuilder) Build() *User {
 	return f.user
 }
 
-func (f *FakeUserBuilder) BuildAndStore(ctx context.Context, db sqlstorage.Querier) *User {
+func (f *FakeUserBuilder) BuildAndStore(ctx context.Context, db *sql.DB) *User {
 	f.t.Helper()
 
 	storage := newSqlStorage(db)
