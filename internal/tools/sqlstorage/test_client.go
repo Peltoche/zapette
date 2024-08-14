@@ -5,13 +5,15 @@ import (
 	"testing"
 
 	"github.com/Peltoche/zapette/internal/migrations"
+	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/stretchr/testify/require"
 )
 
 func NewTestStorage(t *testing.T) *sql.DB {
 	cfg := Config{Path: ":memory:"}
+	tools := tools.NewToolboxForTest(t)
 
-	db, err := NewSQliteClient(&cfg)
+	db, err := NewSQliteClient(&cfg, nil, tools)
 	require.NoError(t, err)
 
 	err = db.Ping()

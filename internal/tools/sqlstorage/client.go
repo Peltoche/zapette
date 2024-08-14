@@ -2,8 +2,9 @@ package sqlstorage
 
 import (
 	"database/sql"
-	"fmt"
 	"net/url"
+
+	"github.com/Peltoche/zapette/internal/tools"
 )
 
 type Config struct {
@@ -17,10 +18,7 @@ type RowScanner interface {
 	Scan(...interface{}) error
 }
 
-func NewSQliteClient(cfg *Config) (*sql.DB, error) {
-	var db *sql.DB
-	var err error
-
+func NewSQliteClient(cfg *Config, hookList *SQLChangeHookList, tools tools.Tools) (*sql.DB, error) {
 	connectionUrlParams := make(url.Values)
 	connectionUrlParams.Add("_txlock", "immediate")
 	connectionUrlParams.Add("_journal_mode", "WAL")
@@ -31,14 +29,11 @@ func NewSQliteClient(cfg *Config) (*sql.DB, error) {
 
 	dsn := "file:" + cfg.Path + "?" + connectionUrlParams.Encode()
 
-	db, err = sql.Open("sqlite3", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %q: %w", dsn, err)
-	}
+	db := newDBWithHooks(dsn, hookList, tools)
 
 	db.SetMaxOpenConns(1)
 
-	err = db.Ping()
+	err := db.Ping()
 	if err != nil {
 		return nil, err
 	}

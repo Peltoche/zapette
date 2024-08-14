@@ -13,8 +13,8 @@ type Result struct {
 	DB *sql.DB
 }
 
-func Init(cfg Config, tools tools.Tools) (Result, error) {
-	db, err := NewSQliteClient(&cfg)
+func Init(cfg Config, hookList *SQLChangeHookList, tools tools.Tools) (Result, error) {
+	db, err := NewSQliteClient(&cfg, hookList, tools)
 	if err != nil {
 		return Result{}, fmt.Errorf("sqlite error: %w", err)
 	}

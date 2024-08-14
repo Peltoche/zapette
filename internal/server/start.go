@@ -80,6 +80,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			// Tools
 			fx.Annotate(tools.NewToolbox, fx.As(new(tools.Tools))),
 			fx.Annotate(html.NewRenderer, fx.As(new(html.Writer))),
+			sqlstorage.NewSQLChangeHookList,
 			sqlstorage.Init,
 			auth.NewAuthenticator,
 
