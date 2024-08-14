@@ -1,7 +1,6 @@
 package sqlstorage
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"net/url"
@@ -16,23 +15,6 @@ type Config struct {
 // Scan behaves like database/sql.Row.Scan.
 type RowScanner interface {
 	Scan(...interface{}) error
-}
-
-type Querier interface {
-	Exec(query string, args ...any) (sql.Result, error)
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	Query(query string, args ...any) (*sql.Rows, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	QueryRow(query string, args ...any) *sql.Row
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-}
-
-type Client struct {
-	db *sql.DB
-}
-
-func NewSQLQuerier(db *sql.DB) Querier {
-	return &Client{db}
 }
 
 func NewSQliteClient(cfg *Config) (*sql.DB, error) {
@@ -62,28 +44,4 @@ func NewSQliteClient(cfg *Config) (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func (c *Client) Exec(query string, args ...any) (sql.Result, error) {
-	return c.db.Exec(query, args...)
-}
-
-func (c *Client) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	return c.db.ExecContext(ctx, query, args...)
-}
-
-func (c *Client) Query(query string, args ...any) (*sql.Rows, error) {
-	return c.db.Query(query, args...)
-}
-
-func (c *Client) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	return c.db.QueryContext(ctx, query, args...)
-}
-
-func (c *Client) QueryRow(query string, args ...any) *sql.Row {
-	return c.db.QueryRow(query, args...)
-}
-
-func (c *Client) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	return c.db.QueryRowContext(ctx, query, args...)
 }

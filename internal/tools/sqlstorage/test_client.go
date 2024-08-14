@@ -1,13 +1,14 @@
 package sqlstorage
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/Peltoche/zapette/internal/migrations"
 	"github.com/stretchr/testify/require"
 )
 
-func NewTestStorage(t *testing.T) Querier {
+func NewTestStorage(t *testing.T) *sql.DB {
 	cfg := Config{Path: ":memory:"}
 
 	db, err := NewSQliteClient(&cfg)
@@ -19,7 +20,5 @@ func NewTestStorage(t *testing.T) Querier {
 	err = migrations.Run(db, nil)
 	require.NoError(t, err)
 
-	querier := NewSQLQuerier(db)
-
-	return querier
+	return db
 }

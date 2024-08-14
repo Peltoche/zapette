@@ -11,7 +11,6 @@ import (
 
 type Result struct {
 	fx.Out
-	Querier    Querier
 	DB         *sql.DB
 	Transactor Transactor
 }
@@ -35,7 +34,6 @@ func Init(cfg Config, tools tools.Tools) (Result, error) {
 
 	return Result{
 		DB:         db,
-		Querier:    db,
 		Transactor: NewTransacGenerator(db, tools),
 	}, nil
 }

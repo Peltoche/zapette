@@ -2,6 +2,7 @@ package websessions
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
@@ -26,7 +27,7 @@ type Service interface {
 	DeleteAll(ctx context.Context, userID uuid.UUID) error
 }
 
-func Init(tools tools.Tools, db sqlstorage.Querier) Service {
+func Init(tools tools.Tools, db *sql.DB) Service {
 	storage := newSQLStorage(db)
 
 	return newService(storage, tools)

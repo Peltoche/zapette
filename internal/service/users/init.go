@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/secret"
@@ -24,7 +25,7 @@ type Service interface {
 
 func Init(
 	tools tools.Tools,
-	db sqlstorage.Querier,
+	db *sql.DB,
 ) Service {
 	store := newSqlStorage(db)
 

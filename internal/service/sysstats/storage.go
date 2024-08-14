@@ -8,7 +8,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 )
 
 const tableName = "sysstats"
@@ -19,11 +18,11 @@ var allFields = []string{"time", "content"}
 
 // sqlStorage use to save/retrieve Users
 type sqlStorage struct {
-	db sqlstorage.Querier
+	db *sql.DB
 }
 
 // newSqlStorage instantiates a new Storage based on sql.
-func newSqlStorage(db sqlstorage.Querier) *sqlStorage {
+func newSqlStorage(db *sql.DB) *sqlStorage {
 	return &sqlStorage{db}
 }
 
