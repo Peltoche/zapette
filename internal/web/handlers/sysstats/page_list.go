@@ -1,6 +1,8 @@
 package sysstats
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -41,18 +43,75 @@ func (h *SysstatsPage) Register(r chi.Router, mids *router.Middlewares) {
 
 	r.Get("/", http.RedirectHandler("/web/sysstats", http.StatusFound).ServeHTTP)
 	r.Get("/web/sysstats", h.printListPage)
+	r.Get("/web/sysstats/data.json", h.servGraphData)
+	r.Get("/web/sysstats/sse", h.sse)
 }
 
-func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
-	user, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
+func (h *SysstatsPage) servGraphData(w http.ResponseWriter, r *http.Request) {
+	_, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
 	if abort {
 		return
 	}
 
-	stats, err := h.sysstats.GetLast5mn(r.Context())
+	graphData, err := h.getGraphData(r.Context())
 	if err != nil {
-		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to get the latest 5mn stats: %w", err))
+		h.html.WriteHTMLErrorPage(w, r, err)
 		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(graphData)
+}
+
+func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
+	_, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
+	if abort {
+		return
+	}
+
+	graphData, err := h.getGraphData(r.Context())
+	if err != nil {
+		h.html.WriteHTMLErrorPage(w, r, err)
+		return
+	}
+
+	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &sysstatstmpl.SysstatsPageTmpl{
+		GraphData: graphData,
+	})
+}
+
+func (h *SysstatsPage) sse(w http.ResponseWriter, r *http.Request) {
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	eventCh := h.sysstats.Watch(r.Context())
+
+	// Send data to the client
+	for range eventCh {
+		graphData, err := h.getGraphData(r.Context())
+		if err != nil {
+			h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to get the graph data: %w", err))
+			return
+		}
+
+		rawData, err := json.Marshal(graphData)
+		if err != nil {
+			h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to encode the graph data: %w", err))
+			return
+		}
+
+		fmt.Fprintf(w, "event: RefreshGraph\ndata: %s\n\n", rawData)
+		w.(http.Flusher).Flush()
+	}
+}
+
+func (h *SysstatsPage) getGraphData(ctx context.Context) (*sysstatstmpl.Graph, error) {
+	stats, err := h.sysstats.GetLast5mn(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the latest 5mn stats: %w", err)
 	}
 
 	memoryTotal := make([]*float64, len(stats))
@@ -74,13 +133,45 @@ func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
 		cacheBuffer[i] = ptr.To(stat.Memory().BufCache().GBytes())
 	}
 
-	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &sysstatstmpl.SysstatsPageTmpl{
-		Latest:      stats[len(stats)-1],
-		User:        user,
-		Labels:      labels,
-		MemoryUsed:  memoryUsed,
-		MemoryTotal: memoryTotal,
-		SwapUsed:    swapUsed,
-		CacheBuffer: cacheBuffer,
-	})
+	return &sysstatstmpl.Graph{
+		Type: "line",
+		Data: sysstatstmpl.Data{
+			Labels: labels,
+			Datasets: []sysstatstmpl.Dataset{
+				{
+					Label:       "Total",
+					Data:        memoryTotal,
+					ShowLine:    true,
+					BorderColor: "red",
+					SteppedLine: true,
+					BorderWidth: 1,
+					PointRadius: 0,
+				},
+				{
+					Label:       "RAM",
+					Data:        memoryUsed,
+					ShowLine:    true,
+					BorderColor: "black",
+					BorderWidth: 1,
+					PointRadius: 0,
+				},
+				{
+					Label:       "Cache + Buffer",
+					Data:        cacheBuffer,
+					ShowLine:    true,
+					BorderColor: "blue",
+					BorderWidth: 1,
+					PointRadius: 0,
+				},
+				{
+					Label:       "Swap",
+					Data:        swapUsed,
+					ShowLine:    true,
+					BorderColor: "#bf1b00",
+					BorderWidth: 2,
+					PointRadius: 0,
+				},
+			},
+		},
+	}, nil
 }

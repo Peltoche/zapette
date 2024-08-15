@@ -50,16 +50,6 @@ func AsRoute(f any) any {
 	)
 }
 
-// AsHook annotates the given constructor to state that
-// it provides a hook to the "hooks" group.
-func AsHook(f any) any {
-	return fx.Annotate(
-		f,
-		fx.As(new(sqlstorage.SQLChangeHook)),
-		fx.ResultTags(`group:"hooks"`),
-	)
-}
-
 func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 	app := fx.New(
 		fx.WithLogger(func(tools tools.Tools) fxevent.Logger { return logger.NewFxLogger(tools.Logger()) }),
