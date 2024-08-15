@@ -1,15 +1,15 @@
 package sqlstorage
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/Peltoche/zapette/internal/tools"
 )
 
 type SQLChangeHook interface {
-	Name() string
-	ShouldRunHook(table string) bool
-	RunHook(table string) error
+	SQLHookName() string
+	RunSQLHook(ctx context.Context, table string) error
 }
 
 type SQLChangeHookList struct {
@@ -32,6 +32,6 @@ func (l *SQLChangeHookList) AddHooks(hooks ...SQLChangeHook) {
 	l.inner = append(l.inner, hooks...)
 
 	for _, hook := range hooks {
-		l.logger.Debug("register SQL hook", slog.String("hook", hook.Name()))
+		l.logger.Debug("register SQL hook", slog.String("hook", hook.SQLHookName()))
 	}
 }

@@ -18,14 +18,16 @@ func newDBWithHooks(dsn string, hookList *SQLChangeHookList, tools tools.Tools) 
 			}
 
 			conn.RegisterUpdateHook(func(op int, dbName string, tableName string, rowID int64) {
+				ctx := context.Background()
+
 				for _, hook := range hookList.GetHooks() {
-					err := hook.RunHook(tableName)
+					err := hook.RunSQLHook(ctx, tableName)
 					if err != nil {
-						tools.Logger().Error("RunHook error", slog.String("hook", hook.Name()), slog.String("error", err.Error()))
+						tools.Logger().Error("RunHook error", slog.String("hook", hook.SQLHookName()), slog.String("error", err.Error()))
 						return
 					}
 
-					tools.Logger().Debug("RunHook success", slog.String("hook", hook.Name()), slog.String("table", tableName))
+					tools.Logger().Debug("RunHook success", slog.String("hook", hook.SQLHookName()), slog.String("table", tableName))
 				}
 			})
 

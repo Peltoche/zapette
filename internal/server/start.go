@@ -50,6 +50,16 @@ func AsRoute(f any) any {
 	)
 }
 
+// AsHook annotates the given constructor to state that
+// it provides a hook to the "hooks" group.
+func AsHook(f any) any {
+	return fx.Annotate(
+		f,
+		fx.As(new(sqlstorage.SQLChangeHook)),
+		fx.ResultTags(`group:"hooks"`),
+	)
+}
+
 func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 	app := fx.New(
 		fx.WithLogger(func(tools tools.Tools) fxevent.Logger { return logger.NewFxLogger(tools.Logger()) }),
@@ -87,7 +97,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			// Services
 			fx.Annotate(users.Init, fx.As(new(users.Service))),
 			fx.Annotate(websessions.Init, fx.As(new(websessions.Service))),
-			fx.Annotate(sysstats.Init),
+			sysstats.Init,
 
 			// Middlewares
 			middlewares.NewBootstrapMiddleware,
@@ -107,6 +117,12 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 		),
 
 		fx.Invoke(migrations.Run),
+
+		fx.Invoke(fx.Annotate(
+			func(hooks []sqlstorage.SQLChangeHook, hookList *sqlstorage.SQLChangeHookList) {
+				hookList.AddHooks(hooks...)
+			}, fx.ParamTags(`group:"hooks"`),
+		)),
 
 		// Start the tasks-runner
 		fx.Invoke(func(svc *sysstats.SystatsCron, lc fx.Lifecycle, tools tools.Tools) {

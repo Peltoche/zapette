@@ -33,17 +33,49 @@ type storage interface {
 }
 
 type service struct {
-	fs      afero.Fs
-	storage storage
-	clock   clock.Clock
+	fs       afero.Fs
+	storage  storage
+	clock    clock.Clock
+	watchers []chan struct{}
 }
 
 func newService(storage storage, fs afero.Fs, tools tools.Tools) *service {
 	return &service{
-		storage: storage,
-		fs:      fs,
-		clock:   tools.Clock(),
+		storage:  storage,
+		fs:       fs,
+		clock:    tools.Clock(),
+		watchers: []chan struct{}{},
 	}
+}
+
+func (s *service) SQLHookName() string {
+	return "sysstats-svc"
+}
+
+// RunHook run as a hook for any db update (insert, update, delete).
+func (s *service) RunSQLHook(ctx context.Context, table string) error {
+	if table != "sysstats" {
+		return nil
+	}
+
+	// Try to fill the chan and skip the event if an one already needs to before
+	// processed.
+	for _, c := range s.watchers {
+		select {
+		case c <- struct{}{}:
+		default:
+		}
+	}
+
+	return nil
+}
+
+func (s *service) Watch() chan struct{} {
+	c := make(chan struct{}, 1)
+
+	s.watchers = append(s.watchers, c)
+
+	return c
 }
 
 func (s *service) GetLast5mn(ctx context.Context) ([]Stats, error) {
