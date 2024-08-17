@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Peltoche/zapette/internal/tools"
@@ -33,17 +35,67 @@ type storage interface {
 }
 
 type service struct {
-	fs      afero.Fs
-	storage storage
-	clock   clock.Clock
+	fs          afero.Fs
+	storage     storage
+	clock       clock.Clock
+	watchers    []chan struct{}
+	watcherLock *sync.Mutex
 }
 
 func newService(storage storage, fs afero.Fs, tools tools.Tools) *service {
 	return &service{
-		storage: storage,
-		fs:      fs,
-		clock:   tools.Clock(),
+		storage:     storage,
+		fs:          fs,
+		clock:       tools.Clock(),
+		watchers:    []chan struct{}{},
+		watcherLock: new(sync.Mutex),
 	}
+}
+
+func (s *service) SQLHookName() string {
+	return "sysstats-svc"
+}
+
+// RunHook run as a hook for any db update (insert, update, delete).
+func (s *service) RunSQLHook(ctx context.Context, table string) error {
+	if table != "sysstats" {
+		return nil
+	}
+
+	s.watcherLock.Lock()
+	defer s.watcherLock.Unlock()
+
+	// Try to fill the chan and skip the event if an one already needs to before
+	// processed.
+	for _, watcher := range s.watchers {
+		select {
+		case watcher <- struct{}{}:
+		default:
+		}
+	}
+
+	return nil
+}
+
+func (s *service) Watch(ctx context.Context) chan struct{} {
+	c := make(chan struct{}, 1)
+
+	go func() {
+		<-ctx.Done()
+		close(c)
+
+		s.watcherLock.Lock()
+		defer s.watcherLock.Unlock()
+		s.watchers = slices.DeleteFunc[[]chan struct{}](s.watchers, func(n chan struct{}) bool {
+			return n == c
+		})
+	}()
+
+	s.watcherLock.Lock()
+	defer s.watcherLock.Unlock()
+	s.watchers = append(s.watchers, c)
+
+	return c
 }
 
 func (s *service) GetLast5mn(ctx context.Context) ([]Stats, error) {

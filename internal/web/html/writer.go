@@ -111,7 +111,7 @@ func NewRenderer(cfg Config) *Renderer {
 func (t *Renderer) writeHTML(w http.ResponseWriter, r *http.Request, status int, template string, args any) {
 	layout := ""
 
-	if strings.Contains(template, "page") {
+	if strings.Contains(template, "page") && r.Header.Get("HX-Boosted") == "" && r.Header.Get("HX-Request") == "" {
 		dir := path.Dir(template)
 
 		for {

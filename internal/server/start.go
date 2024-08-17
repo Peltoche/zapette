@@ -87,7 +87,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			// Services
 			fx.Annotate(users.Init, fx.As(new(users.Service))),
 			fx.Annotate(websessions.Init, fx.As(new(websessions.Service))),
-			fx.Annotate(sysstats.Init),
+			sysstats.Init,
 
 			// Middlewares
 			middlewares.NewBootstrapMiddleware,
@@ -107,6 +107,12 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 		),
 
 		fx.Invoke(migrations.Run),
+
+		fx.Invoke(fx.Annotate(
+			func(hooks []sqlstorage.SQLChangeHook, hookList *sqlstorage.SQLChangeHookList) {
+				hookList.AddHooks(hooks...)
+			}, fx.ParamTags(`group:"hooks"`),
+		)),
 
 		// Start the tasks-runner
 		fx.Invoke(func(svc *sysstats.SystatsCron, lc fx.Lifecycle, tools tools.Tools) {

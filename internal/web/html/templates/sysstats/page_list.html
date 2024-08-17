@@ -4,99 +4,58 @@
       <p class="mb-0"><strong>Memory</strong></p>
     </div>
     <div class="card-body">
-      <div class="d-flex justify-content-around">
-        <div>
-          <p class="mb-2">RAM</p>
-          <h6>{{.Latest.Memory.UsedMemory.HR}}/{{.Latest.Memory.TotalMemory.HR}}</h6>
-        </div>
-        <div>
-          <p class="mb-2">Cache</p>
-          <h6>{{.Latest.Memory.BufCache.HR}}</h6>
-        </div>
-        <div>
-          <p class="mb-2">Swap</p>
-          <h6>{{.Latest.Memory.UsedSwap.HR}}/{{.Latest.Memory.TotalSwap.HR}}</h6>
-        </div>
-      </div>
+      <canvas id="line-chart"></canvas>
     </div>
-
-    <canvas id="line-chart"></canvas>
   </div>
-</div>
 </div>
 
 
 <script type="module">
   import {Chart, initMDB} from "/assets/js/libs/chart.es.min.js";
 
-  const labels = {{.Labels}}
-  const memoryUsed = {{.MemoryUsed}}
-  const memoryTotal = {{.MemoryTotal}}
-  const swapUsed = {{.SwapUsed}}
-  const cacheBuffer = {{.CacheBuffer}}
-
   initMDB({Chart})
 
-  const dataLine = {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Total',
-          data: memoryTotal,
-          showLine: true,
-          borderColor: 'red',
-          steppedLine: true,
-          borderWidth: 1,
-          pointRadius: 0,
+  const graphData = {{.GraphData}}
+
+  const options = {
+    animation: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          boxWidth: 10,
         },
-        {
-          label: 'RAM',
-          data: memoryUsed,
-          borderColor: 'black',
-          pointRadius: 0,
-        },
-        {
-          label: 'Cache + Buffer',
-          data: cacheBuffer,
-          borderColor: 'blue',
-          // borderWidth: 1,
-          pointRadius: 0,
-        },
-        {
-          label: 'Swap',
-          data: swapUsed,
-          borderColor: '#bf1b00',
-          // borderWidth: 1,
-          pointRadius: 0,
+      },
+    },
+    scales: {
+      y: {
+        ticks: {
+          beginAtZaero: true,
+          callback: function (value, index, values) {
+            return value + " " + "GiB";
+          },
         }
-      ],
+      },
     },
   }
 
-  new Chart(document.getElementById('line-chart'), dataLine, {
-    options: {
-      animation: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            boxWidth: 10,
-          },
-        },
-      },
-      scales: {
-        y: {
-          ticks: {
-            beginAtZaero: true,
-            callback: function (value, index, values) {
-              return value + " " + "GiB";
-            },
-          }
-        },
-      },
-    },
-  });
+
+  console.log(graphData)
+  const chart = document.getElementById('line-chart');
+  const chartInstance = new Chart(chart, graphData, options);
+
+  function refreshGraph(data) {
+    console.log('refresh')
+    console.log(data.data)
+    chartInstance.update(data.data)
+  }
+
+  document.body.addEventListener('htmx:sseMessage', function (e) {
+    if (e.detail.type !== "RefreshGraph") {
+      return
+    }
+
+    refreshGraph(JSON.parse(e.detail.data))
+  })
 
 </script>
