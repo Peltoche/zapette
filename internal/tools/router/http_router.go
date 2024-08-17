@@ -33,10 +33,22 @@ type Registerer interface {
 	Register(r chi.Router, mids *Middlewares)
 }
 
-func NewServer(routes []Registerer, cfg Config, lc fx.Lifecycle, mids *Middlewares, tools tools.Tools, fs afero.Fs, writer html.Writer) (*API, error) {
+type ConnectionCloser interface {
+	CloseOpenConnections()
+}
+
+func NewServer(
+	routes []Registerer,
+	cfg Config,
+	lc fx.Lifecycle,
+	mids *Middlewares,
+	tools tools.Tools,
+	fs afero.Fs,
+	writer html.Writer,
+) (*API, *http.Server, error) {
 	handler, err := createHandler(cfg, routes, mids, writer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create the listener: %w", err)
+		return nil, nil, fmt.Errorf("failed to create the listener: %w", err)
 	}
 
 	httpLogger := slog.NewLogLogger(tools.Logger().Handler(), slog.LevelError)
@@ -47,20 +59,28 @@ func NewServer(routes []Registerer, cfg Config, lc fx.Lifecycle, mids *Middlewar
 		ErrorLog: httpLogger,
 	}
 
+	srv.RegisterOnShutdown(func() {
+		for _, route := range routes {
+			if r, ok := route.(ConnectionCloser); ok {
+				r.CloseOpenConnections()
+			}
+		}
+	})
+
 	if cfg.TLS {
 		cert, err := afero.ReadFile(fs, cfg.CertFile)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load the TLS certification file: %w", err)
+			return nil, nil, fmt.Errorf("failed to load the TLS certification file: %w", err)
 		}
 
 		key, err := afero.ReadFile(fs, cfg.KeyFile)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load the TLS key file: %w", err)
+			return nil, nil, fmt.Errorf("failed to load the TLS key file: %w", err)
 		}
 
 		certif, err := tls.X509KeyPair(cert, key)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate the X509 key pair: %w", err)
+			return nil, nil, fmt.Errorf("failed to generate the X509 key pair: %w", err)
 		}
 
 		srv.TLSConfig = &tls.Config{
@@ -95,7 +115,7 @@ func NewServer(routes []Registerer, cfg Config, lc fx.Lifecycle, mids *Middlewar
 
 	daemon.SdNotify(false, daemon.SdNotifyReady)
 
-	return &API{}, nil
+	return &API{}, srv, nil
 }
 
 func createHandler(cfg Config, routes []Registerer, mids *Middlewares, writer html.Writer) (chi.Router, error) {
