@@ -19,6 +19,7 @@ type SSEPage struct {
 	auth     *auth.Authenticator
 	sysstats sysstats.Service
 	logger   *slog.Logger
+	closeCh  chan struct{}
 }
 
 func NewSSEPage(
@@ -30,6 +31,7 @@ func NewSSEPage(
 		auth:     auth,
 		sysstats: sysstats,
 		logger:   tools.Logger().With(slog.String("source", "SSE")),
+		closeCh:  make(chan struct{}, 1),
 	}
 }
 
@@ -42,6 +44,11 @@ func (p *SSEPage) Register(r chi.Router, mids *router.Middlewares) {
 }
 
 func (p *SSEPage) sse(w http.ResponseWriter, r *http.Request) {
+	_, _, abort := p.auth.GetUserAndSession(w, r, auth.AnyUser)
+	if abort {
+		return
+	}
+
 	// Set headers for SSE
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -54,7 +61,14 @@ func (p *SSEPage) listenSysstatsEvents(ctx context.Context, w http.ResponseWrite
 	eventCh := p.sysstats.Watch(ctx)
 
 	// Send data to the client
-	for range eventCh {
+	for {
+		select {
+		case <-eventCh:
+			// continue
+		case <-p.closeCh:
+			return
+		}
+
 		stats, err := p.sysstats.GetLast5mn(ctx)
 		if err != nil {
 			p.logger.Error("failed to get the 5mn stats", slog.String("error", err.Error()))
@@ -72,4 +86,9 @@ func (p *SSEPage) listenSysstatsEvents(ctx context.Context, w http.ResponseWrite
 		fmt.Fprintf(w, "event: RefreshGraph\ndata: %s\n\n", rawData)
 		w.(http.Flusher).Flush()
 	}
+}
+
+func (p *SSEPage) CloseOpenConnections() {
+	p.logger.Warn("close open connections")
+	close(p.closeCh)
 }

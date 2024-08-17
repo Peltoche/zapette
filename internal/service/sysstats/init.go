@@ -28,6 +28,7 @@ func Init(db *sql.DB, fs afero.Fs, tools tools.Tools) Result {
 	storage := newSqlStorage(db)
 
 	svc := newService(storage, fs, tools)
+
 	return Result{
 		Service: svc,
 		Watcher: svc,
