@@ -1,8 +1,6 @@
 package sysstats
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -43,25 +41,6 @@ func (h *SysstatsPage) Register(r chi.Router, mids *router.Middlewares) {
 
 	r.Get("/", http.RedirectHandler("/web/sysstats", http.StatusFound).ServeHTTP)
 	r.Get("/web/sysstats", h.printListPage)
-	r.Get("/web/sysstats/data.json", h.servGraphData)
-	r.Get("/web/sysstats/sse", h.sse)
-}
-
-func (h *SysstatsPage) servGraphData(w http.ResponseWriter, r *http.Request) {
-	_, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
-	if abort {
-		return
-	}
-
-	graphData, err := h.getGraphData(r.Context())
-	if err != nil {
-		h.html.WriteHTMLErrorPage(w, r, err)
-		return
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(graphData)
 }
 
 func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
@@ -70,50 +49,20 @@ func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	graphData, err := h.getGraphData(r.Context())
+	stats, err := h.sysstats.GetLast5mn(r.Context())
 	if err != nil {
-		h.html.WriteHTMLErrorPage(w, r, err)
+		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to get the latest 5mn stats: %w", err))
 		return
 	}
+
+	graphData := StatsToGraphData(stats)
 
 	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &sysstatstmpl.SysstatsPageTmpl{
 		GraphData: graphData,
 	})
 }
 
-func (h *SysstatsPage) sse(w http.ResponseWriter, r *http.Request) {
-	// Set headers for SSE
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-
-	eventCh := h.sysstats.Watch(r.Context())
-
-	// Send data to the client
-	for range eventCh {
-		graphData, err := h.getGraphData(r.Context())
-		if err != nil {
-			h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to get the graph data: %w", err))
-			return
-		}
-
-		rawData, err := json.Marshal(graphData)
-		if err != nil {
-			h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to encode the graph data: %w", err))
-			return
-		}
-
-		fmt.Fprintf(w, "event: RefreshGraph\ndata: %s\n\n", rawData)
-		w.(http.Flusher).Flush()
-	}
-}
-
-func (h *SysstatsPage) getGraphData(ctx context.Context) (*sysstatstmpl.Graph, error) {
-	stats, err := h.sysstats.GetLast5mn(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get the latest 5mn stats: %w", err)
-	}
-
+func StatsToGraphData(stats []sysstats.Stats) *sysstatstmpl.Graph {
 	memoryTotal := make([]*float64, len(stats))
 	memoryUsed := make([]*float64, len(stats))
 	swapUsed := make([]*float64, len(stats))
@@ -173,5 +122,5 @@ func (h *SysstatsPage) getGraphData(ctx context.Context) (*sysstatstmpl.Graph, e
 				},
 			},
 		},
-	}, nil
+	}
 }
