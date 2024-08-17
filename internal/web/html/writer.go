@@ -9,11 +9,8 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/Peltoche/zapette/internal/tools/logger"
-	"github.com/Peltoche/zapette/internal/tools/uuid"
-	"github.com/dustin/go-humanize"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/unrolled/render"
 )
@@ -62,40 +59,7 @@ func NewRenderer(cfg Config) *Renderer {
 		Layout:        "",
 		IsDevelopment: cfg.HotReload,
 		Extensions:    []string{".html"},
-		Funcs: []template.FuncMap{
-			{
-				"humanTime": humanize.Time,
-				"humanDate": func(t time.Time) string { return t.Format(time.DateTime) },
-				"humanSize": humanize.Bytes,
-			},
-			{
-				"sub": func(a, b int) int { return a - b },
-			},
-			{
-				"add": func(a, b int) int { return a + b },
-			},
-			{
-				"pathJoin": func(elems ...any) string {
-					strElems := make([]string, len(elems))
-					for i, elem := range elems {
-						switch elem := elem.(type) {
-						case uuid.UUID:
-							strElems[i] = string(elem)
-						default:
-							strElems[i] = elem.(string)
-						}
-					}
-					return path.Join(strElems...)
-				},
-				"getInodeIconClass": func(_ string, isDir bool) string {
-					if isDir {
-						return "fa-folder text-primary"
-					}
-
-					return "fa-file text-muted"
-				},
-			},
-		},
+		Funcs:         []template.FuncMap{},
 	}
 
 	if cfg.PrettyRender {
