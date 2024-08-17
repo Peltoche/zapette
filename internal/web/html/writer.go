@@ -144,12 +144,12 @@ func (t *Renderer) WriteHTMLErrorPage(w http.ResponseWriter, r *http.Request, er
 	reqID := r.Context().Value(middleware.RequestIDKey).(string)
 
 	if r.Header.Get("HX-Boosted") == "" && r.Header.Get("HX-Request") == "" {
-		layout = path.Join("home/layout")
+		layout = path.Join("misc/layout")
 	}
 
 	logger.LogEntrySetError(r.Context(), err)
 
-	if err := t.render.HTML(w, http.StatusInternalServerError, "home/page_500", map[string]any{
+	if err := t.render.HTML(w, http.StatusInternalServerError, "misc/page_500", map[string]any{
 		"requestID": reqID,
 	}, render.HTMLOptions{Layout: layout}); err != nil {
 		logger.LogEntrySetAttrs(r.Context(), slog.String("render-error", err.Error()))
