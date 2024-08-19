@@ -14,7 +14,7 @@ const tableName = "sysstats"
 
 var errNotFound = errors.New("not found")
 
-var allFields = []string{"time", "content"}
+var allFields = []string{"time", "namespace", "content"}
 
 // sqlStorage use to save/retrieve Users
 type sqlStorage struct {
@@ -27,7 +27,7 @@ func newSqlStorage(db *sql.DB) *sqlStorage {
 }
 
 // Save the given User.
-func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
+func (s *sqlStorage) Save(ctx context.Context, ns Namespace, stats *Stats) error {
 	rawStats, _ := stats.MarshalBinary()
 
 	_, err := sq.
@@ -35,6 +35,7 @@ func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
 		Columns(allFields...).
 		Values(
 			stats.time.Unix(),
+			ns,
 			rawStats,
 		).
 		RunWith(s.db).
@@ -46,10 +47,10 @@ func (s *sqlStorage) Save(ctx context.Context, stats *Stats) error {
 	return nil
 }
 
-func (s *sqlStorage) GetRange(ctx context.Context, start time.Time, end time.Time) ([]Stats, error) {
+func (s *sqlStorage) GetRange(ctx context.Context, ns Namespace, start time.Time, end time.Time) ([]Stats, error) {
 	rows, err := sq.
 		Select(allFields...).
-		Where(sq.And{sq.GtOrEq{"time": start.Unix()}, sq.LtOrEq{"time": end.Unix()}}).
+		Where(sq.And{sq.Eq{"namespace": ns}, sq.GtOrEq{"time": start.Unix()}, sq.LtOrEq{"time": end.Unix()}}).
 		OrderBy("time ASC").
 		From(tableName).
 		RunWith(s.db).
@@ -64,6 +65,7 @@ func (s *sqlStorage) GetRange(ctx context.Context, start time.Time, end time.Tim
 func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 	rawContent := []byte{}
 	var unixTime int64
+	var ns Namespace
 
 	err := sq.
 		Select(allFields...).
@@ -73,6 +75,7 @@ func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 		RunWith(s.db).
 		ScanContext(ctx,
 			&unixTime,
+			&ns,
 			&rawContent,
 		)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -91,6 +94,7 @@ func (s *sqlStorage) GetLatest(ctx context.Context) (*Stats, error) {
 
 func (s *sqlStorage) scanRows(rows *sql.Rows) ([]Stats, error) {
 	stats := []Stats{}
+	var ns Namespace
 
 	for rows.Next() {
 		var unixTime int64
@@ -98,6 +102,7 @@ func (s *sqlStorage) scanRows(rows *sql.Rows) ([]Stats, error) {
 
 		err := rows.Scan(
 			&unixTime,
+			&ns,
 			&rawContent,
 		)
 		if err != nil {

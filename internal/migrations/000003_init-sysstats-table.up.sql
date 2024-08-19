@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS sysstats (
   "time" INTEGER NOT NULL,
+  "namespace" INTEGER NOT NULL,
   "content" BLOB NOT NULL
 ) STRICT;
 

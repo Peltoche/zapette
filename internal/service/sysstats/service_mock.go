@@ -13,6 +13,36 @@ type MockService struct {
 	mock.Mock
 }
 
+// GetLast5mn provides a mock function with given fields: ctx
+func (_m *MockService) GetLast5mn(ctx context.Context) ([]Stats, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLast5mn")
+	}
+
+	var r0 []Stats
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]Stats, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []Stats); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]Stats)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetLatest provides a mock function with given fields: ctx
 func (_m *MockService) GetLatest(ctx context.Context) (*Stats, error) {
 	ret := _m.Called(ctx)
@@ -41,6 +71,26 @@ func (_m *MockService) GetLatest(ctx context.Context) (*Stats, error) {
 	}
 
 	return r0, r1
+}
+
+// Watch provides a mock function with given fields: ctx
+func (_m *MockService) Watch(ctx context.Context) chan struct{} {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Watch")
+	}
+
+	var r0 chan struct{}
+	if rf, ok := ret.Get(0).(func(context.Context) chan struct{}); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(chan struct{})
+		}
+	}
+
+	return r0
 }
 
 // fetchAndRegister provides a mock function with given fields: ctx
