@@ -44,9 +44,9 @@ func (_m *mockStorage) GetLatest(ctx context.Context) (*Stats, error) {
 	return r0, r1
 }
 
-// GetRange provides a mock function with given fields: ctx, start, end
-func (_m *mockStorage) GetRange(ctx context.Context, start time.Time, end time.Time) ([]Stats, error) {
-	ret := _m.Called(ctx, start, end)
+// GetRange provides a mock function with given fields: ctx, ns, start, end
+func (_m *mockStorage) GetRange(ctx context.Context, ns Namespace, start time.Time, end time.Time) ([]Stats, error) {
+	ret := _m.Called(ctx, ns, start, end)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRange")
@@ -54,19 +54,19 @@ func (_m *mockStorage) GetRange(ctx context.Context, start time.Time, end time.T
 
 	var r0 []Stats
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) ([]Stats, error)); ok {
-		return rf(ctx, start, end)
+	if rf, ok := ret.Get(0).(func(context.Context, Namespace, time.Time, time.Time) ([]Stats, error)); ok {
+		return rf(ctx, ns, start, end)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []Stats); ok {
-		r0 = rf(ctx, start, end)
+	if rf, ok := ret.Get(0).(func(context.Context, Namespace, time.Time, time.Time) []Stats); ok {
+		r0 = rf(ctx, ns, start, end)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]Stats)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
-		r1 = rf(ctx, start, end)
+	if rf, ok := ret.Get(1).(func(context.Context, Namespace, time.Time, time.Time) error); ok {
+		r1 = rf(ctx, ns, start, end)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -74,17 +74,17 @@ func (_m *mockStorage) GetRange(ctx context.Context, start time.Time, end time.T
 	return r0, r1
 }
 
-// Save provides a mock function with given fields: ctx, stats
-func (_m *mockStorage) Save(ctx context.Context, stats *Stats) error {
-	ret := _m.Called(ctx, stats)
+// Save provides a mock function with given fields: ctx, ns, stats
+func (_m *mockStorage) Save(ctx context.Context, ns Namespace, stats *Stats) error {
+	ret := _m.Called(ctx, ns, stats)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Save")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *Stats) error); ok {
-		r0 = rf(ctx, stats)
+	if rf, ok := ret.Get(0).(func(context.Context, Namespace, *Stats) error); ok {
+		r0 = rf(ctx, ns, stats)
 	} else {
 		r0 = ret.Error(0)
 	}

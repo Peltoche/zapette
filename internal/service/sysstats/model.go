@@ -10,6 +10,13 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/datasize"
 )
 
+type Namespace int
+
+const (
+	Unknown Namespace = iota
+	MinGraph
+)
+
 type Stats struct {
 	time   time.Time
 	memory *Memory
