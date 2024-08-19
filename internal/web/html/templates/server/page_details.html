@@ -1,0 +1,21 @@
+<div class="container">
+  <div class="card mt-4 text-center">
+    <div class="card-header d-flex flex-row justify-content-between border-0 align-items-center">
+      <p class="m-0"><span class="display-3"><b>{{.Stats.Memory.PercentageUsedMemory}}%</b></span><span
+          class="text-muted">
+          of {{.Stats.Memory.TotalMemory.HR}}</span></p>
+      <div class="d-flex flex-row">
+        <div class="flex-col align-items-center ps-3">
+          <b>{{.Stats.Memory.PercentageAvailableMemory}}%</b>
+          <p class="text-muted m-0">avail</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-body pt-1">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: {{.Stats.Memory.PercentageUsedMemory}}%;"
+          aria-valuenow="{{.Stats.Memory.PercentageUsedMemory}}" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+    </div>
+  </div>
+</div>

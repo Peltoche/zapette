@@ -20,6 +20,7 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 	"github.com/Peltoche/zapette/internal/web/handlers"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
+	"github.com/Peltoche/zapette/internal/web/handlers/server"
 	sysstatstmpl "github.com/Peltoche/zapette/internal/web/handlers/sysstats"
 	"github.com/Peltoche/zapette/internal/web/html"
 	"github.com/Peltoche/zapette/internal/web/middlewares"
@@ -102,6 +103,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			AsRoute(auth.NewBootstrapPage),
 			AsRoute(sysstatstmpl.NewSysstatsPage),
 			AsRoute(handlers.NewSSEPage),
+			AsRoute(server.NewDetailsPage),
 
 			// HTTP Router / HTTP Server
 			router.InitMiddlewares,
