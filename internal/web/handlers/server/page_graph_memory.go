@@ -1,4 +1,4 @@
-package sysstats
+package server
 
 import (
 	"fmt"
@@ -6,44 +6,41 @@ import (
 	"time"
 
 	"github.com/Peltoche/zapette/internal/service/sysstats"
-	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/ptr"
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
 	"github.com/Peltoche/zapette/internal/web/html"
-	sysstatstmpl "github.com/Peltoche/zapette/internal/web/html/templates/sysstats"
+	"github.com/Peltoche/zapette/internal/web/html/templates/server"
 	"github.com/go-chi/chi/v5"
 )
 
-type SysstatsPage struct {
-	auth     *auth.Authenticator
+type MemoryGraphPage struct {
 	html     html.Writer
+	auth     *auth.Authenticator
 	sysstats sysstats.Service
 }
 
-func NewSysstatsPage(
+func NewMemoryGraphPage(
 	html html.Writer,
 	auth *auth.Authenticator,
 	sysstats sysstats.Service,
-	tools tools.Tools,
-) *SysstatsPage {
-	return &SysstatsPage{
+) *MemoryGraphPage {
+	return &MemoryGraphPage{
 		html:     html,
 		sysstats: sysstats,
 		auth:     auth,
 	}
 }
 
-func (h *SysstatsPage) Register(r chi.Router, mids *router.Middlewares) {
+func (h *MemoryGraphPage) Register(r chi.Router, mids *router.Middlewares) {
 	if mids != nil {
 		r = r.With(mids.Defaults()...)
 	}
 
-	r.Get("/", http.RedirectHandler("/web/sysstats", http.StatusFound).ServeHTTP)
-	r.Get("/web/sysstats", h.printListPage)
+	r.Get("/web/server/memory/details", h.printMemoryGraphPage)
 }
 
-func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
+func (h *MemoryGraphPage) printMemoryGraphPage(w http.ResponseWriter, r *http.Request) {
 	_, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
 	if abort {
 		return
@@ -55,14 +52,14 @@ func (h *SysstatsPage) printListPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	graphData := StatsToGraphData(stats)
+	graphData := StatsToMemoryGraphData(stats)
 
-	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &sysstatstmpl.SysstatsPageTmpl{
+	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &server.SysstatsPageTmpl{
 		GraphData: graphData,
 	})
 }
 
-func StatsToGraphData(stats []sysstats.Stats) *sysstatstmpl.Graph {
+func StatsToMemoryGraphData(stats []sysstats.Stats) *server.Graph {
 	memoryTotal := make([]*float64, len(stats))
 	memoryUsed := make([]*float64, len(stats))
 	swapUsed := make([]*float64, len(stats))
@@ -82,11 +79,11 @@ func StatsToGraphData(stats []sysstats.Stats) *sysstatstmpl.Graph {
 		cacheBuffer[i] = ptr.To(stat.Memory().BufCache().GBytes())
 	}
 
-	return &sysstatstmpl.Graph{
+	return &server.Graph{
 		Type: "line",
-		Data: sysstatstmpl.Data{
+		Data: server.Data{
 			Labels: labels,
-			Datasets: []sysstatstmpl.Dataset{
+			Datasets: []server.Dataset{
 				{
 					Label:       "Total",
 					Data:        memoryTotal,
