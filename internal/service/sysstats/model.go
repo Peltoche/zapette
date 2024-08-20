@@ -3,6 +3,7 @@ package sysstats
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math"
 	"time"
@@ -28,6 +29,13 @@ func (s *Stats) Time() time.Time {
 
 func (s *Stats) Memory() *Memory {
 	return s.memory
+}
+
+func (s *Stats) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"time":   s.time,
+		"memory": s.memory,
+	})
 }
 
 func (a *Stats) MarshalBinary() ([]byte, error) {
@@ -70,6 +78,20 @@ type Memory struct {
 	shmem        datasize.ByteSize
 	totalSwap    datasize.ByteSize
 	freeSwap     datasize.ByteSize
+}
+
+func (c *Memory) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]float64{
+		"totalMem":     math.Round(c.totalMem.GBytes()*100) / 100,
+		"availableMem": math.Round(c.availableMem.GBytes()*100) / 100,
+		"freeMem":      math.Round(c.freeMem.GBytes()*100) / 100,
+		"buffers":      math.Round(c.buffers.GBytes()*100) / 100,
+		"cached":       math.Round(c.cached.GBytes()*100) / 100,
+		"sReclaimable": math.Round(c.sReclaimable.GBytes()*100) / 100,
+		"shmem":        math.Round(c.shmem.GBytes()*100) / 100,
+		"totalSwap":    math.Round(c.totalSwap.GBytes()*100) / 100,
+		"freeSwap":     math.Round(c.freeSwap.GBytes()*100) / 100,
+	})
 }
 
 func (c *Memory) MarshalBinary() ([]byte, error) {
