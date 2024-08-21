@@ -14,7 +14,7 @@
       <canvas class="mt-4" id="line-chart"></canvas>
     </div>
   </div>
-  <div hx-ext="sse" sse-connect="/web/sse" hx-swap="none" sse-swap="RefreshGraph"> </div>
+  <div hx-ext="sse" sse-connect="/web/server/memory/details/sse" hx-swap="none" sse-swap="RefreshGraph"> </div>
 </div>
 
 
@@ -48,13 +48,10 @@
   }
 
 
-  console.log(graphData)
   const chart = document.getElementById('line-chart');
   const chartInstance = new Chart(chart, graphData, options);
 
   function refreshGraph(data) {
-    console.log('refresh')
-    console.log(data.data)
     chartInstance.update(data.data)
   }
 
