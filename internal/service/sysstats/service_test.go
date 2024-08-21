@@ -2,12 +2,12 @@ package sysstats
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/datasize"
+	"github.com/Peltoche/zapette/internal/tools/startutils"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +21,7 @@ func TestFetchMemInfos(t *testing.T) {
 		toolsMock := tools.NewMock(t)
 		afs := afero.NewMemMapFs()
 		storageMock := newMockStorage(t)
-		loadFileinFS(t, afs, "./testdata/meminfo.txt", "/proc/meminfo")
+		startutils.LoadFileinFS(t, afs, "./testdata/meminfo.txt", "/proc/meminfo")
 
 		toolsMock.ClockMock.On("Now").Return(now).Once()
 
@@ -48,14 +48,4 @@ func TestFetchMemInfos(t *testing.T) {
 		assert.Equal(t, "11.1 GB", res.memory.FreeMemory().HumanReadable())
 		assert.Equal(t, "2.9 GB", res.memory.UsedMemory().HumanReadable())
 	})
-}
-
-func loadFileinFS(t *testing.T, destFS afero.Fs, sourcePath, destPath string) {
-	t.Helper()
-
-	rawFile, err := os.ReadFile(sourcePath)
-	require.NoError(t, err)
-
-	err = afero.WriteFile(destFS, destPath, rawFile, 0o644)
-	require.NoError(t, err)
 }
