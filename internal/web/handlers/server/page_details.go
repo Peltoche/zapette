@@ -1,10 +1,13 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/Peltoche/zapette/internal/service/sysstats"
+	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
 	"github.com/Peltoche/zapette/internal/web/html"
@@ -16,10 +19,13 @@ type DetailsPage struct {
 	html     html.Writer
 	auth     *auth.Authenticator
 	sysstats sysstats.Service
+	logger   *slog.Logger
+	closeCh  chan struct{}
 }
 
 func NewDetailsPage(
 	html html.Writer,
+	tools tools.Tools,
 	auth *auth.Authenticator,
 	sysstats sysstats.Service,
 ) *DetailsPage {
@@ -27,6 +33,8 @@ func NewDetailsPage(
 		html:     html,
 		sysstats: sysstats,
 		auth:     auth,
+		logger:   tools.Logger().With(slog.String("source", "server-details-sse")),
+		closeCh:  make(chan struct{}, 1),
 	}
 }
 
@@ -36,6 +44,7 @@ func (h *DetailsPage) Register(r chi.Router, mids *router.Middlewares) {
 	}
 
 	r.Get("/web/server", h.printServerPage)
+	r.Get("/web/server/sse", h.sse)
 }
 
 func (h *DetailsPage) printServerPage(w http.ResponseWriter, r *http.Request) {
@@ -53,4 +62,59 @@ func (h *DetailsPage) printServerPage(w http.ResponseWriter, r *http.Request) {
 	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &server.DetailsPageTmpl{
 		Stats: latest,
 	})
+}
+
+func (h *DetailsPage) sse(w http.ResponseWriter, r *http.Request) {
+	type refreshPage struct {
+		PercentageUsedMemory      int    `json:"percentageUsedMemory"`
+		PercentageAvailableMemory int    `json:"percentageAvailableMemory"`
+		TotalMemory               string `json:"totalMemory"`
+	}
+
+	ctx := r.Context()
+
+	_, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
+	if abort {
+		return
+	}
+
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	eventCh := h.sysstats.Watch(ctx)
+
+	for {
+		select {
+		case <-eventCh:
+			// continue
+		case <-h.closeCh:
+			return
+		}
+
+		latest, err := h.sysstats.GetLatest(ctx)
+		if err != nil {
+			h.logger.Error("failed to get the latest stat", slog.String("error", err.Error()))
+			return
+		}
+
+		rawData, err := json.Marshal(&refreshPage{
+			PercentageUsedMemory:      latest.Memory().PercentageUsedMemory(),
+			PercentageAvailableMemory: latest.Memory().PercentageAvailableMemory(),
+			TotalMemory:               latest.Memory().TotalMemory().HR(),
+		})
+		if err != nil {
+			h.logger.Error("failed to marshal the latest stat", slog.String("error", err.Error()))
+			continue
+		}
+
+		fmt.Fprintf(w, "event: LatestStat\ndata: %s\n\n", rawData)
+		w.(http.Flusher).Flush()
+	}
+}
+
+func (h *DetailsPage) CloseOpenConnections() {
+	h.logger.Info("close open connections")
+	close(h.closeCh)
 }

@@ -1,12 +1,13 @@
 <div class="container">
   <div class="card mt-4 text-center">
     <div class="card-header d-flex flex-row justify-content-between border-0 align-items-center">
-      <p class="m-0"><span class="display-3"><b>{{.Stats.Memory.PercentageUsedMemory}}%</b></span><span
-          class="text-muted">
+      <p class="m-0"><span class="display-3"><b
+            id="percentageUsed">{{.Stats.Memory.PercentageUsedMemory}}%</b></span><span class="text-muted"
+          id="totalMemory">
           of {{.Stats.Memory.TotalMemory.HR}}</span></p>
       <div class="d-flex flex-row">
         <div class="flex-col align-items-center ps-3">
-          <b>{{.Stats.Memory.PercentageAvailableMemory}}%</b>
+          <b id="percentageAvailable">{{.Stats.Memory.PercentageAvailableMemory}}%</b>
           <p class="text-muted m-0">avail</p>
         </div>
       </div>
@@ -14,10 +15,29 @@
     <a href="/web/server/memory/details" class="btn btn-primary stretched-link opacity-0"
       style="width: 0px; height: 0px;">Show graph</a>
     <div class="card-body pt-1">
-      <div class="progress">
+      <div class="progress" style="height: 10px;">
         <div class="progress-bar" role="progressbar" style="width: {{.Stats.Memory.PercentageUsedMemory}}%;"
           aria-valuenow="{{.Stats.Memory.PercentageUsedMemory}}" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
     </div>
   </div>
+  <div hx-ext="sse" sse-connect="/web/server/sse" hx-swap="none" sse-swap="LatestStat"> </div>
 </div>
+
+<script type="module">
+  function refreshPageData(data) {
+    document.getElementById("percentageUsed").textContent = data.percentageUsedMemory + "%"
+    document.getElementById("percentageAvailable").textContent = data.percentageAvailableMemory + "%"
+    document.getElementById("totalMemory").textContent = " of " + data.totalMemory
+    console.log(data)
+  }
+
+  document.body.addEventListener('htmx:sseMessage', function (e) {
+    if (e.detail.type !== "LatestStat") {
+      return
+    }
+
+    refreshPageData(JSON.parse(e.detail.data))
+  })
+
+</script>
