@@ -17,10 +17,10 @@ const (
 )
 
 type service struct {
-	fs       afero.Fs
-	clock    clock.Clock
-	uptime   time.Duration
-	hostname string
+	fs        afero.Fs
+	clock     clock.Clock
+	startTime time.Time
+	hostname  string
 }
 
 func newService(fs afero.Fs, tools tools.Tools) *service {
@@ -41,7 +41,7 @@ func (s *service) fetch(ctx context.Context) error {
 		return fmt.Errorf("failed to fetch the hostname: %w", err)
 	}
 
-	s.uptime = uptime
+	s.startTime = s.clock.Now().Add(-uptime)
 	s.hostname = hostname
 
 	return nil
@@ -67,9 +67,12 @@ func (s *service) fetchUptime(_ context.Context) (time.Duration, error) {
 		return 0, fmt.Errorf("failed to parse %q: %w", uptime, err)
 	}
 
-	return uptime, nil
+	return uptime.Truncate(time.Second), nil
 }
 
-func (s *service) GetInfos(ctx context.Context) (*Infos, error) {
-	return nil, nil
+func (s *service) GetInfos(ctx context.Context) *Infos {
+	return &Infos{
+		uptime:   time.Since(s.startTime).Truncate(time.Second),
+		hostname: s.hostname,
+	}
 }

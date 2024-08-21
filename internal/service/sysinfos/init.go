@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	GetInfos(ctx context.Context) (*Infos, error)
+	GetInfos(ctx context.Context) *Infos
 }
 
 func Init(fs afero.Fs, tools tools.Tools) (Service, error) {

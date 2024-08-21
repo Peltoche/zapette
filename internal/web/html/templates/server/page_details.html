@@ -1,6 +1,22 @@
 <div class="container">
   <div class="card mt-4 text-center">
     <div class="card-header d-flex flex-row justify-content-between border-0 align-items-center">
+      <p class="m-0"><b>About</b></p>
+    </div>
+    <div class="card-body pt-1">
+      <div class="d-flex flex-row justify-content-between">
+        <p>Hostname</p>
+        <p>{{.SysInfos.Hostname}}</p>
+      </div>
+      <div class="d-flex flex-row justify-content-between">
+        <p>Uptime</p>
+        <p>{{.SysInfos.Uptime}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4 text-center">
+    <div class="card-header d-flex flex-row justify-content-between border-0 align-items-center">
       <p class="m-0"><span class="display-3"><b
             id="percentageUsed">{{.Stats.Memory.PercentageUsedMemory}}%</b></span><span class="text-muted"
           id="totalMemory">

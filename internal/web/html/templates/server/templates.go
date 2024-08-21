@@ -1,11 +1,13 @@
 package server
 
 import (
+	"github.com/Peltoche/zapette/internal/service/sysinfos"
 	"github.com/Peltoche/zapette/internal/service/sysstats"
 )
 
 type DetailsPageTmpl struct {
-	Stats *sysstats.Stats
+	Stats    *sysstats.Stats
+	SysInfos *sysinfos.Infos
 }
 
 func (t *DetailsPageTmpl) Template() string { return "server/page_details" }

@@ -19,15 +19,19 @@ func TestFetchSysInfos(t *testing.T) {
 		loadFileinFS(t, afs, "./testdata/uptime.txt", "/proc/uptime")
 		loadFileinFS(t, afs, "./testdata/hostname.txt", "/etc/hostname")
 
+		now := time.Now()
+
+		toolsMock.ClockMock.On("Now").Return(now).Once()
+
 		svc := newService(afs, toolsMock)
 
 		err := svc.fetch(context.Background())
 		require.NoError(t, err)
 
 		assert.Equal(t, "zapettePC", svc.hostname)
-		expected, err := time.ParseDuration("109118.83s")
-		require.NoError(t, err)
-		assert.Equal(t, expected, svc.uptime)
+
+		expected := now.Add(-109118 * time.Second)
+		assert.Equal(t, expected, svc.startTime)
 	})
 }
 

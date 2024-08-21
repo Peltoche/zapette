@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/Peltoche/zapette/internal/service/sysinfos"
 	"github.com/Peltoche/zapette/internal/service/sysstats"
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/router"
@@ -19,6 +20,7 @@ type DetailsPage struct {
 	html     html.Writer
 	auth     *auth.Authenticator
 	sysstats sysstats.Service
+	sysinfos sysinfos.Service
 	logger   *slog.Logger
 	closeCh  chan struct{}
 }
@@ -27,11 +29,13 @@ func NewDetailsPage(
 	html html.Writer,
 	tools tools.Tools,
 	auth *auth.Authenticator,
+	sysinfos sysinfos.Service,
 	sysstats sysstats.Service,
 ) *DetailsPage {
 	return &DetailsPage{
 		html:     html,
 		sysstats: sysstats,
+		sysinfos: sysinfos,
 		auth:     auth,
 		logger:   tools.Logger().With(slog.String("source", "server-details-sse")),
 		closeCh:  make(chan struct{}, 1),
@@ -60,7 +64,8 @@ func (h *DetailsPage) printServerPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &server.DetailsPageTmpl{
-		Stats: latest,
+		Stats:    latest,
+		SysInfos: h.sysinfos.GetInfos(r.Context()),
 	})
 }
 
