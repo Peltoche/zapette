@@ -35,6 +35,9 @@ var testConfig = Config{
 func TestServerStart(t *testing.T) {
 	ctx := context.Background()
 
+	startutils.LoadFileinFS(t, testConfig.FS, "../service/sysinfos/testdata/uptime.txt", "/proc/uptime")
+	startutils.LoadFileinFS(t, testConfig.FS, "../service/sysinfos/testdata/hostname.txt", "/etc/hostname")
+
 	app := start(ctx, testConfig, fx.Invoke(func(*router.API) {}))
 	require.NoError(t, app.Err())
 }
