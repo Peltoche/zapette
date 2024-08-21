@@ -1,11 +1,15 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/Peltoche/zapette/internal/service/sysstats"
+	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/ptr"
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
@@ -18,10 +22,13 @@ type MemoryGraphPage struct {
 	html     html.Writer
 	auth     *auth.Authenticator
 	sysstats sysstats.Service
+	logger   *slog.Logger
+	closeCh  chan struct{}
 }
 
 func NewMemoryGraphPage(
 	html html.Writer,
+	tools tools.Tools,
 	auth *auth.Authenticator,
 	sysstats sysstats.Service,
 ) *MemoryGraphPage {
@@ -29,6 +36,8 @@ func NewMemoryGraphPage(
 		html:     html,
 		sysstats: sysstats,
 		auth:     auth,
+		logger:   tools.Logger().With(slog.String("source", "server-memory-graph-sse")),
+		closeCh:  make(chan struct{}, 1),
 	}
 }
 
@@ -38,6 +47,7 @@ func (h *MemoryGraphPage) Register(r chi.Router, mids *router.Middlewares) {
 	}
 
 	r.Get("/web/server/memory/details", h.printMemoryGraphPage)
+	r.Get("/web/server/memory/details/sse", h.sse)
 }
 
 func (h *MemoryGraphPage) printMemoryGraphPage(w http.ResponseWriter, r *http.Request) {
@@ -52,14 +62,64 @@ func (h *MemoryGraphPage) printMemoryGraphPage(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	graphData := StatsToMemoryGraphData(stats)
+	graphData := statsToMemoryGraphData(stats)
 
 	h.html.WriteHTMLTemplate(w, r, http.StatusOK, &server.SysstatsPageTmpl{
 		GraphData: graphData,
 	})
 }
 
-func StatsToMemoryGraphData(stats []sysstats.Stats) *server.Graph {
+func (h *MemoryGraphPage) sse(w http.ResponseWriter, r *http.Request) {
+	_, _, abort := h.auth.GetUserAndSession(w, r, auth.AnyUser)
+	if abort {
+		return
+	}
+
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	h.listenSysstatsEvents(r.Context(), w)
+}
+
+func (h *MemoryGraphPage) listenSysstatsEvents(ctx context.Context, w http.ResponseWriter) {
+	eventCh := h.sysstats.Watch(ctx)
+
+	// Send data to the client
+	for {
+		select {
+		case <-eventCh:
+			// continue
+		case <-h.closeCh:
+			return
+		}
+
+		stats, err := h.sysstats.GetLast5mn(ctx)
+		if err != nil {
+			h.logger.Error("failed to get the 5mn stats", slog.String("error", err.Error()))
+			return
+		}
+
+		graphData := statsToMemoryGraphData(stats)
+
+		rawData, err := json.Marshal(graphData)
+		if err != nil {
+			h.logger.Error("failed to marshal the graph data", slog.String("error", err.Error()))
+			continue
+		}
+
+		fmt.Fprintf(w, "event: RefreshGraph\ndata: %s\n\n", rawData)
+		w.(http.Flusher).Flush()
+	}
+}
+
+func (h *MemoryGraphPage) CloseOpenConnections() {
+	h.logger.Warn("close open connections")
+	close(h.closeCh)
+}
+
+func statsToMemoryGraphData(stats []sysstats.Stats) *server.Graph {
 	memoryTotal := make([]*float64, len(stats))
 	memoryUsed := make([]*float64, len(stats))
 	swapUsed := make([]*float64, len(stats))
