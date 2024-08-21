@@ -40,7 +40,7 @@ func Test_NewRunCmd(t *testing.T) {
 			cmdErr = cmd.ExecuteContext(ctx)
 		}()
 
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/", port), nil)
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/web/login", port), nil)
 		require.NoError(t, err)
 
 		var res *http.Response
@@ -133,7 +133,7 @@ func Test_NewRunCmd(t *testing.T) {
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
 
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://localhost:%d/", port), nil)
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://localhost:%d/web/login", port), nil)
 		require.NoError(t, err)
 
 		var res *http.Response

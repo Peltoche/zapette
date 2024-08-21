@@ -11,7 +11,7 @@ import (
 	"github.com/Peltoche/zapette/internal/tools"
 	"github.com/Peltoche/zapette/internal/tools/router"
 	"github.com/Peltoche/zapette/internal/web/handlers/auth"
-	sysstatshandler "github.com/Peltoche/zapette/internal/web/handlers/sysstats"
+	"github.com/Peltoche/zapette/internal/web/handlers/server"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -75,7 +75,7 @@ func (p *SSEPage) listenSysstatsEvents(ctx context.Context, w http.ResponseWrite
 			return
 		}
 
-		graphData := sysstatshandler.StatsToGraphData(stats)
+		graphData := server.StatsToMemoryGraphData(stats)
 
 		rawData, err := json.Marshal(graphData)
 		if err != nil {

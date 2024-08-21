@@ -1,12 +1,20 @@
+<nav class="navbar">
+  <div class="container-fluid">
+    <div class="container-fluid justify-content-between">
+      <div class="d-flex flex-row align-items-center">
+        <a class="navbar-nav" href="/web/server" hx-boost="true"><i class="fas fa-arrow-left fa-lg"></i></a>
+        <a class="navbar-brand ps-4">Memory History</a>
+      </div>
+    </div>
+</nav>
+
 <div class="container">
   <div class="card mt-4 text-center">
-    <div class="card-header bg-light border-0">
-      <p class="mb-0"><strong>Memory</strong></p>
-    </div>
     <div class="card-body">
-      <canvas id="line-chart"></canvas>
+      <canvas class="mt-4" id="line-chart"></canvas>
     </div>
   </div>
+  <div hx-ext="sse" sse-connect="/web/sse" hx-swap="none" sse-swap="RefreshGraph"> </div>
 </div>
 
 
