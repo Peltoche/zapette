@@ -92,6 +92,7 @@ func NewConfigFromCmd(cmd *cobra.Command) (server.Config, error) {
 	var storagePath string
 	if cfg.MemoryFS {
 		fs = afero.NewMemMapFs()
+		loadRequiredFilesIntoMemFS(fs)
 		storagePath = ":memory:"
 	} else {
 		fs = afero.NewOsFs()
@@ -213,4 +214,32 @@ func generateSelfSignedCertificate(hostnames []string, folderPath string, fs afe
 	}
 
 	return certificatePath, privateKeyPath, nil
+}
+
+func loadRequiredFilesIntoMemFS(fs afero.Fs) error {
+	err := loadFileInFS(fs, "/proc/uptime")
+	if err != nil {
+		return fmt.Errorf("failed to load /proc/uptime: %w", err)
+	}
+
+	err = loadFileInFS(fs, "/etc/hostname")
+	if err != nil {
+		return fmt.Errorf("failed to load /etc/hostname: %w", err)
+	}
+
+	return nil
+}
+
+func loadFileInFS(fs afero.Fs, path string) error {
+	rawFile, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to read %q: %w", path, err)
+	}
+
+	err = afero.WriteFile(fs, path, rawFile, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write %q: %w", path, err)
+	}
+
+	return nil
 }
