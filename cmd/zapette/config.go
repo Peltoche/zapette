@@ -1,4 +1,4 @@
-package commands
+package main
 
 import (
 	"crypto/ecdsa"
@@ -27,8 +27,6 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/sqlstorage"
 	"github.com/Peltoche/zapette/internal/web/html"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -36,44 +34,32 @@ var (
 	ErrDevFlagRequire    = errors.New("this flag require the --dev flag setup")
 )
 
-type Config struct {
-	LogLevel       string   `mapstructure:"log-level"`
-	Folder         string   `mapstructure:"folder"`
-	TLSCert        string   `mapstructure:"tls-cert"`
-	TLSKey         string   `mapstructure:"tls-key"`
-	HTTPHost       string   `mapstructure:"http-host"`
-	HTTPHostnames  []string `mapstructure:"http-hosts"`
-	HTTPPort       int      `mapstructure:"http-port"`
-	MemoryFS       bool     `mapstructure:"memory-fs"`
-	SelfSignedCert bool     `mapstructure:"self-signed-cert"`
-	Debug          bool     `mapstructure:"debug"`
-	Dev            bool     `mapstructure:"dev"`
-	HotReload      bool     `mapstructure:"hot-reload"`
+type flags struct {
+	LogLevel       string
+	Folder         string
+	TLSCert        string
+	TLSKey         string
+	HTTPHost       string
+	HTTPHostnames  []string
+	HTTPPort       int
+	MemoryFS       bool
+	SelfSignedCert bool
+	Debug          bool
+	Dev            bool
+	HotReload      bool
 }
 
-func NewConfigFromCmd(cmd *cobra.Command) (server.Config, error) {
-	var cfg Config
-
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("zapette")
-
-	viper.BindPFlags(cmd.Flags())
-
-	err := viper.Unmarshal(&cfg)
-	if err != nil {
-		return server.Config{}, fmt.Errorf("config error: %w", err)
-	}
-
-	if cfg.HotReload && !cfg.Dev {
+func NewConfigFromFlags(flags *flags) (server.Config, error) {
+	if flags.HotReload && !flags.Dev {
 		return server.Config{}, fmt.Errorf("--hot-reload: %w", ErrDevFlagRequire)
 	}
 
-	if cfg.MemoryFS && !cfg.Dev {
+	if flags.MemoryFS && !flags.Dev {
 		return server.Config{}, fmt.Errorf("--memory-fs: %w", ErrDevFlagRequire)
 	}
 
 	var logLevel slog.Level
-	switch strings.ToLower(cfg.LogLevel) {
+	switch strings.ToLower(flags.LogLevel) {
 	case "info":
 		logLevel = slog.LevelInfo
 	case "warn", "warning":
@@ -84,68 +70,68 @@ func NewConfigFromCmd(cmd *cobra.Command) (server.Config, error) {
 		return server.Config{}, errors.New("invalid log level")
 	}
 
-	if cfg.Debug {
+	if flags.Debug {
 		logLevel = slog.LevelDebug
 	}
 
 	var fs afero.Fs
 	var storagePath string
-	if cfg.MemoryFS {
+	if flags.MemoryFS {
 		fs = afero.NewMemMapFs()
 		loadRequiredFilesIntoMemFS(fs)
 		storagePath = ":memory:"
 	} else {
 		fs = afero.NewOsFs()
-		storagePath = path.Join(cfg.Folder, "db.sqlite")
+		storagePath = path.Join(flags.Folder, "db.sqlite")
 	}
 
-	err = fs.MkdirAll(cfg.Folder, 0o755)
+	err := fs.MkdirAll(flags.Folder, 0o755)
 	if err != nil && !errors.Is(err, os.ErrExist) {
-		return server.Config{}, fmt.Errorf("failed to create %q: %w", cfg.Folder, err)
+		return server.Config{}, fmt.Errorf("failed to create %q: %w", flags.Folder, err)
 	}
 
-	if cfg.SelfSignedCert {
-		if cfg.TLSCert != "" || cfg.TLSKey != "" {
+	if flags.SelfSignedCert {
+		if flags.TLSCert != "" || flags.TLSKey != "" {
 			return server.Config{}, ErrConflictTLSConfig
 		}
 
-		cfg.TLSCert, cfg.TLSKey, err = generateSelfSignedCertificate(cfg.HTTPHostnames, cfg.Folder, fs)
+		flags.TLSCert, flags.TLSKey, err = generateSelfSignedCertificate(flags.HTTPHostnames, flags.Folder, fs)
 		if err != nil {
 			return server.Config{}, fmt.Errorf("failed to generate the self-signed certificate: %w", err)
 		}
 	}
 
-	isTLSEnabled := cfg.TLSCert != "" || cfg.TLSKey != ""
+	isTLSEnabled := flags.TLSCert != "" || flags.TLSKey != ""
 
 	return server.Config{
 		FS: fs,
 		Listener: router.Config{
-			Addr:      net.JoinHostPort(cfg.HTTPHost, strconv.Itoa(cfg.HTTPPort)),
+			Addr:      net.JoinHostPort(flags.HTTPHost, strconv.Itoa(flags.HTTPPort)),
 			TLS:       isTLSEnabled,
-			Secure:    !cfg.Dev,
-			CertFile:  cfg.TLSCert,
-			KeyFile:   cfg.TLSKey,
-			HostNames: cfg.HTTPHostnames,
+			Secure:    !flags.Dev,
+			CertFile:  flags.TLSCert,
+			KeyFile:   flags.TLSKey,
+			HostNames: flags.HTTPHostnames,
 		},
 		Storage: sqlstorage.Config{
 			Path: storagePath,
 		},
 		Assets: assets.Config{
-			HotReload: cfg.HotReload,
+			HotReload: flags.HotReload,
 		},
 		Tools: tools.Config{
 			Response: response.Config{
-				PrettyRender: cfg.Dev,
+				PrettyRender: flags.Dev,
 			},
 			Log: logger.Config{
 				Level:  logLevel,
 				Output: os.Stderr,
 			},
 		},
-		Folder: server.Folder(cfg.Folder),
+		Folder: server.Folder(flags.Folder),
 		HTML: html.Config{
-			PrettyRender: cfg.Dev,
-			HotReload:    cfg.HotReload,
+			PrettyRender: flags.Dev,
+			HotReload:    flags.HotReload,
 		},
 	}, nil
 }

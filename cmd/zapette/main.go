@@ -1,41 +1,110 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"fmt"
+	"io"
 	"os"
+	"path"
 
-	"github.com/Peltoche/zapette/cmd/zapette/commands"
+	"github.com/Peltoche/zapette/internal/server"
 	"github.com/Peltoche/zapette/internal/tools/buildinfos"
-	"github.com/spf13/cobra"
+	"github.com/adrg/xdg"
 )
 
-const binaryName = "zapette"
+const (
+	binaryName        = "zapette"
+	binaryDescription = "Observe and manager your server.\n\nFlags:\n"
+)
+
+var configDirs = append(xdg.DataDirs, xdg.DataHome)
 
 type exitCode int
 
 const (
-	exitOK    exitCode = 0
-	exitError exitCode = 1
+	exitOK        exitCode = 0
+	exitError     exitCode = 1
+	exitInitError exitCode = 2
 )
 
 func main() {
-	code := mainRun()
+	output := os.Stdout
+
+	code := mainRun(os.Args, output)
 	os.Exit(int(code))
 }
 
-func mainRun() exitCode {
-	cmd := &cobra.Command{
-		Use:     binaryName,
-		Short:   "Observe and manage your server.",
-		Version: buildinfos.Version(),
+func mainRun(args []string, output io.Writer) exitCode {
+	ctx := context.Background()
+
+	defaultFolder := getDefaultFolder()
+	flags, err := parseFlags(args, defaultFolder, output)
+	if err != nil {
+		return exitInitError
 	}
 
-	// Subcommands
-	cmd.AddCommand(commands.NewRunCmd(binaryName))
+	cfg, err := NewConfigFromFlags(flags)
+	if err != nil {
+		fmt.Fprintf(output, err.Error())
+		return exitInitError
+	}
 
-	err := cmd.Execute()
+	_, err = server.Run(ctx, cfg)
 	if err != nil {
 		return exitError
 	}
 
 	return exitOK
+}
+
+func getDefaultFolder() string {
+	var defaultFolder string
+
+	for _, dir := range configDirs {
+		_, err := os.Stat(path.Join(dir, binaryName))
+		if err == nil {
+			defaultFolder = path.Join(dir, binaryName)
+			break
+		}
+	}
+
+	if defaultFolder == "" {
+		defaultFolder = path.Join(xdg.DataHome, binaryName)
+	}
+
+	return defaultFolder
+}
+
+func parseFlags(args []string, defaultFolder string, output io.Writer) (*flags, error) {
+	flags := flags{}
+
+	fs := flag.NewFlagSet("flags", flag.ContinueOnError)
+	fs.SetOutput(output)
+
+	if !buildinfos.IsRelease() {
+		// Those flags are  only available outside the releases for security reasons.
+		fs.BoolVar(&flags.Dev, "dev", false, "Run in dev mode and make json prettier")
+		fs.BoolVar(&flags.HotReload, "hot-reload", false, "Enable the asset hot reload")
+	}
+
+	fs.BoolVar(&flags.Debug, "debug", false, "Force the debug level")
+	fs.StringVar(&flags.LogLevel, "log-level", "info", "Log message verbosity LEVEL (debug, info, warning, error)")
+
+	fs.StringVar(&flags.Folder, "folder", defaultFolder, "Specify you data directory location")
+	fs.BoolVar(&flags.MemoryFS, "memory-fs", false, "Replace the OS filesystem by a in-memory stub. *Every data will disapear after each restart*.")
+
+	fs.StringVar(&flags.TLSCert, "tls-cert", "", "Public HTTPS certificate file (.crt)")
+	fs.StringVar(&flags.TLSKey, "tls-key", "", "Private HTTPS key file (.key)")
+	fs.BoolVar(&flags.SelfSignedCert, "self-signed-cert", false, "Generate and use a self-signed HTTPS/TLS certificate.")
+
+	fs.IntVar(&flags.HTTPPort, "http-port", 5764, "Web server port number.")
+	fs.StringVar(&flags.HTTPHost, "http-host", "0.0.0.0", "Web server IP address")
+
+	err := fs.Parse(args[1:])
+	if err != nil {
+		return nil, err
+	}
+
+	return &flags, nil
 }
