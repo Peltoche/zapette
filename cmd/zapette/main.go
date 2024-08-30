@@ -44,6 +44,11 @@ func mainRun(args []string, output io.Writer) exitCode {
 		return exitInitError
 	}
 
+	if flags.PrintVersion {
+		fmt.Fprintf(output, "%s version %s\n", binaryName, buildinfos.Version())
+		return exitOK
+	}
+
 	cfg, err := NewConfigFromFlags(flags)
 	if err != nil {
 		fmt.Fprintf(output, err.Error())
@@ -100,6 +105,8 @@ func parseFlags(args []string, defaultFolder string, output io.Writer) (*flags, 
 
 	fs.IntVar(&flags.HTTPPort, "http-port", 5764, "Web server port number.")
 	fs.StringVar(&flags.HTTPHost, "http-host", "0.0.0.0", "Web server IP address")
+
+	fs.BoolVar(&flags.PrintVersion, "version", false, "help for zapette")
 
 	err := fs.Parse(args[1:])
 	if err != nil {
