@@ -48,6 +48,7 @@ type flags struct {
 	Dev            bool
 	HotReload      bool
 	PrintVersion   bool
+	PrintHelp      bool
 }
 
 func NewConfigFromFlags(flags *flags) (server.Config, error) {

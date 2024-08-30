@@ -15,7 +15,13 @@ import (
 
 const (
 	binaryName        = "zapette"
-	binaryDescription = "Observe and manager your server.\n\nFlags:\n"
+	binaryDescription = `Observe and manager your server.
+
+Usage:
+  ` + binaryName + ` [flags...]
+
+Flags:
+`
 )
 
 var configDirs = append(xdg.DataDirs, xdg.DataHome)
@@ -44,6 +50,10 @@ func mainRun(args []string, output io.Writer) exitCode {
 		return exitInitError
 	}
 
+	if flags == nil {
+		return exitOK
+	}
+
 	if flags.PrintVersion {
 		fmt.Fprintf(output, "%s version %s\n", binaryName, buildinfos.Version())
 		return exitOK
@@ -51,7 +61,7 @@ func mainRun(args []string, output io.Writer) exitCode {
 
 	cfg, err := NewConfigFromFlags(flags)
 	if err != nil {
-		fmt.Fprintf(output, err.Error())
+		io.WriteString(output, err.Error())
 		return exitInitError
 	}
 
@@ -106,11 +116,18 @@ func parseFlags(args []string, defaultFolder string, output io.Writer) (*flags, 
 	fs.IntVar(&flags.HTTPPort, "http-port", 5764, "Web server port number.")
 	fs.StringVar(&flags.HTTPHost, "http-host", "0.0.0.0", "Web server IP address")
 
-	fs.BoolVar(&flags.PrintVersion, "version", false, "help for zapette")
+	fs.BoolVar(&flags.PrintVersion, "version", false, "version for zapette")
+	fs.BoolVar(&flags.PrintHelp, "help", false, "help for zapette")
 
 	err := fs.Parse(args[1:])
 	if err != nil {
 		return nil, err
+	}
+
+	if flags.PrintHelp {
+		io.WriteString(output, binaryDescription)
+		fs.PrintDefaults()
+		return nil, nil
 	}
 
 	return &flags, nil
