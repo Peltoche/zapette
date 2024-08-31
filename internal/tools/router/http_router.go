@@ -121,6 +121,13 @@ func NewServer(
 func createHandler(cfg Config, routes []Registerer, mids *Middlewares, writer html.Writer) (chi.Router, error) {
 	r := chi.NewMux()
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		url := r.URL.String()
+
+		if len(url) > 1 && url[len(url)-1] == '/' {
+			http.Redirect(w, r, url[:len(url)-1], http.StatusPermanentRedirect)
+			return
+		}
+
 		writer.WriteHTMLTemplate(w, r, http.StatusNotFound, &misc.NotFoundPageTmpl{})
 		// res.WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, res any)
 		// http.Redirect(w, r, "", http.StatusFound)
