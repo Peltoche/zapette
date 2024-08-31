@@ -18,20 +18,18 @@ import (
 type Middleware func(next http.Handler) http.Handler
 
 type Middlewares struct {
-	BrowserLang  Middleware
-	StripSlashed Middleware
-	Logger       Middleware
-	Bootstrap    Middleware
-	OnlyJSON     Middleware
-	RealIP       Middleware
-	CORS         Middleware
+	BrowserLang Middleware
+	Logger      Middleware
+	Bootstrap   Middleware
+	OnlyJSON    Middleware
+	RealIP      Middleware
+	CORS        Middleware
 }
 
 func (m *Middlewares) Defaults() []func(next http.Handler) http.Handler {
 	return []func(next http.Handler) http.Handler{
 		m.Logger,
 		m.RealIP,
-		m.StripSlashed,
 		m.CORS,
 		m.BrowserLang,
 		m.Bootstrap,
@@ -40,12 +38,11 @@ func (m *Middlewares) Defaults() []func(next http.Handler) http.Handler {
 
 func InitMiddlewares(tools tools.Tools, cfg Config, bootstrapMid *middlewares.BootstrapMiddleware) *Middlewares {
 	return &Middlewares{
-		BrowserLang:  language.Middleware,
-		StripSlashed: middleware.StripSlashes,
-		Logger:       logger.NewRouterLogger(tools.Logger()),
-		OnlyJSON:     middleware.AllowContentType("application/json"),
-		Bootstrap:    bootstrapMid.Handle,
-		RealIP:       middleware.RealIP,
+		BrowserLang: language.Middleware,
+		Logger:      logger.NewRouterLogger(tools.Logger()),
+		OnlyJSON:    middleware.AllowContentType("application/json"),
+		Bootstrap:   bootstrapMid.Handle,
+		RealIP:      middleware.RealIP,
 		CORS: cors.Handler(cors.Options{
 			AllowOriginFunc: func(_ *http.Request, origin string) bool {
 				url, err := url.ParseRequestURI(origin)
