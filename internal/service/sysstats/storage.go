@@ -50,7 +50,7 @@ func (s *sqlStorage) Save(ctx context.Context, ns Namespace, stats *Stats) error
 func (s *sqlStorage) GetRange(ctx context.Context, ns Namespace, start time.Time, end time.Time) ([]Stats, error) {
 	rows, err := sq.
 		Select(allFields...).
-		Where(sq.And{sq.Eq{"namespace": ns}, sq.GtOrEq{"time": start.Unix()}, sq.LtOrEq{"time": end.Unix()}}).
+		Where(sq.And{sq.Eq{"namespace": ns}, sq.Gt{"time": start.Unix()}, sq.LtOrEq{"time": end.Unix()}}).
 		OrderBy("time ASC").
 		From(tableName).
 		RunWith(s.db).

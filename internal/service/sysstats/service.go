@@ -86,7 +86,7 @@ func (s *service) Watch(ctx context.Context) chan struct{} {
 
 		s.watcherLock.Lock()
 		defer s.watcherLock.Unlock()
-		s.watchers = slices.DeleteFunc[[]chan struct{}](s.watchers, func(n chan struct{}) bool {
+		s.watchers = slices.DeleteFunc(s.watchers, func(n chan struct{}) bool {
 			return n == c
 		})
 	}()
@@ -98,19 +98,20 @@ func (s *service) Watch(ctx context.Context) chan struct{} {
 	return c
 }
 
-func (s *service) GetLast5mn(ctx context.Context) ([]Stats, error) {
+func (s *service) GetStatsForGraph(ctx context.Context, graph *Graph) ([]Stats, error) {
 	now := s.clock.Now()
-	start := now.Add(-5 * time.Minute)
+	start := now.Add(-graph.graphSpan)
 
-	stats, err := s.storage.GetRange(ctx, MinGraph, start, now)
+	stats, err := s.storage.GetRange(ctx, graph.namespace, start, now)
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]Stats, (5*time.Minute)/(5*time.Second))
+	res := make([]Stats, graph.graphSpan/graph.tickSpan)
 
 	for _, stat := range stats {
-		res[int(stat.Time().Sub(start).Seconds())/5] = stat
+		relativeStart := stat.Time().Sub(start)
+		res[relativeStart/graph.tickSpan] = stat
 	}
 
 	return res, nil
