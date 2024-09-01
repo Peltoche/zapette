@@ -52,7 +52,8 @@ func TestSystatSqlStorage(t *testing.T) {
 		res, err := store.GetRange(ctx, MinGraph, time1, time2)
 		require.NoError(t, err)
 
-		assert.EqualValues(t, []Stats{*stats, *stats2}, res)
+		// Do not include "stats" as the first value must be stricly superior and not equal
+		assert.EqualValues(t, []Stats{*stats2}, res)
 	})
 
 	t.Run("GetRange with an empty namespace", func(t *testing.T) {
@@ -63,9 +64,9 @@ func TestSystatSqlStorage(t *testing.T) {
 	})
 
 	t.Run("GetRange succes 2", func(t *testing.T) {
-		res, err := store.GetRange(ctx, MinGraph, time1.Add(time.Second), time2)
+		res, err := store.GetRange(ctx, MinGraph, time1.Add(-time.Second), time2)
 		require.NoError(t, err)
 
-		assert.EqualValues(t, []Stats{*stats2}, res)
+		assert.EqualValues(t, []Stats{*stats, *stats2}, res)
 	})
 }

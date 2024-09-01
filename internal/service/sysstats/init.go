@@ -19,7 +19,7 @@ type Result struct {
 
 type Service interface {
 	GetLatest(ctx context.Context) (*Stats, error)
-	GetLast5mn(ctx context.Context) ([]Stats, error)
+	GetStatsForGraph(ctx context.Context, graph *Graph) ([]Stats, error)
 	Watch(ctx context.Context) chan struct{}
 	fetchAndRegister(ctx context.Context) (*Stats, error)
 }

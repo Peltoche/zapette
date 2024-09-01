@@ -11,6 +11,22 @@ import (
 	"github.com/Peltoche/zapette/internal/tools/datasize"
 )
 
+var FiveMnGraph = Graph{
+	graphSpan: 5 * time.Minute,
+	tickSpan:  5 * time.Second,
+	namespace: MinGraph,
+}
+
+type Graph struct {
+	graphSpan time.Duration
+	tickSpan  time.Duration
+	namespace Namespace
+}
+
+func (g *Graph) Ticks() int {
+	return int(g.graphSpan / g.tickSpan)
+}
+
 type Namespace int
 
 const (

@@ -56,7 +56,7 @@ func (h *MemoryGraphPage) printMemoryGraphPage(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	stats, err := h.sysstats.GetLast5mn(r.Context())
+	stats, err := h.sysstats.GetStatsForGraph(r.Context(), &sysstats.FiveMnGraph)
 	if err != nil {
 		h.html.WriteHTMLErrorPage(w, r, fmt.Errorf("failed to get the latest 5mn stats: %w", err))
 		return
@@ -95,7 +95,7 @@ func (h *MemoryGraphPage) listenSysstatsEvents(ctx context.Context, w http.Respo
 			return
 		}
 
-		stats, err := h.sysstats.GetLast5mn(ctx)
+		stats, err := h.sysstats.GetStatsForGraph(ctx, &sysstats.FiveMnGraph)
 		if err != nil {
 			h.logger.Error("failed to get the 5mn stats", slog.String("error", err.Error()))
 			return
