@@ -13,36 +13,6 @@ type MockService struct {
 	mock.Mock
 }
 
-// GetLast5mn provides a mock function with given fields: ctx
-func (_m *MockService) GetLast5mn(ctx context.Context) ([]Stats, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetLast5mn")
-	}
-
-	var r0 []Stats
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]Stats, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) []Stats); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]Stats)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetLatest provides a mock function with given fields: ctx
 func (_m *MockService) GetLatest(ctx context.Context) (*Stats, error) {
 	ret := _m.Called(ctx)
@@ -66,6 +36,36 @@ func (_m *MockService) GetLatest(ctx context.Context) (*Stats, error) {
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetStatsForGraph provides a mock function with given fields: ctx, graph
+func (_m *MockService) GetStatsForGraph(ctx context.Context, graph *Graph) ([]Stats, error) {
+	ret := _m.Called(ctx, graph)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetStatsForGraph")
+	}
+
+	var r0 []Stats
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *Graph) ([]Stats, error)); ok {
+		return rf(ctx, graph)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *Graph) []Stats); ok {
+		r0 = rf(ctx, graph)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]Stats)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *Graph) error); ok {
+		r1 = rf(ctx, graph)
 	} else {
 		r1 = ret.Error(1)
 	}
