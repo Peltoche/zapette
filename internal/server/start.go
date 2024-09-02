@@ -12,6 +12,7 @@ import (
 	"github.com/Peltoche/zapette/internal/service/config"
 	"github.com/Peltoche/zapette/internal/service/sysinfos"
 	"github.com/Peltoche/zapette/internal/service/sysstats"
+	"github.com/Peltoche/zapette/internal/service/timeseries"
 	"github.com/Peltoche/zapette/internal/service/users"
 	"github.com/Peltoche/zapette/internal/service/utilities"
 	"github.com/Peltoche/zapette/internal/service/websessions"
@@ -91,6 +92,7 @@ func start(ctx context.Context, cfg Config, invoke fx.Option) *fx.App {
 			fx.Annotate(websessions.Init, fx.As(new(websessions.Service))),
 			fx.Annotate(sysinfos.Init, fx.As(new(sysinfos.Service))),
 			fx.Annotate(config.Init, fx.As(new(config.Service))),
+			fx.Annotate(timeseries.Init, fx.As(new(timeseries.Service))),
 			sysstats.Init,
 
 			// Middlewares
