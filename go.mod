@@ -12,7 +12,7 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
-	github.com/golang-migrate/migrate/v4 v4.17.1
+	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mileusna/useragent v1.3.4
@@ -21,8 +21,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/unrolled/render v1.6.1
 	go.uber.org/fx v1.22.2
-	golang.org/x/crypto v0.26.0
-	golang.org/x/text v0.17.0
+	golang.org/x/crypto v0.27.0
+	golang.org/x/text v0.18.0
 )
 
 require (
@@ -41,7 +41,7 @@ require (
 	go.uber.org/dig v1.18.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
