@@ -15,7 +15,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
-	github.com/mileusna/useragent v1.3.4
+	github.com/mileusna/useragent v1.3.5
 	github.com/neilotoole/slogt v1.1.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
